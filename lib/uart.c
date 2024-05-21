@@ -156,7 +156,7 @@ void uart_setup()
 	/*
 	   150, 300, 600, 1200, 2400, 4800, 9600, 14400, 19200, 28800, 38400, 57600, 115200, 230400, 460800, 921600
 	 */
-  InitialUART0_Timer1(115200);
+  InitialUART0_Timer1(57600);
   InitialUART1_Timer3(115200);
   clr_TI;
   clr_TI_1;
