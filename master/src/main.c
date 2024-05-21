@@ -23,9 +23,9 @@
 #include "linefi_packet.h"
 
 #define KEY_ESC (27)
-//#define TIMER0_VAL        (133*10) // 1msec 1kHz
+#define TIMER0_VAL        (133*10) // 1msec 1kHz
 //#define TIMER0_VAL        (133*1) // 100usec 10kHz
-#define TIMER0_VAL        (13) // 10usec // 100kHz
+//#define TIMER0_VAL        (13) // 10usec // 100kHz
 
 #define TH0_INIT (((65536-TIMER0_VAL)>>8)&0xFF)
 #define TL0_INIT  ((65536-TIMER0_VAL)&0xFF)
@@ -93,6 +93,8 @@ UINT8 __xdata gpu8Data2[20] = {
 };
 
 #define LINEFI_DEFAULT_RATE	3
+
+uint16 __xdata gu16TimeCnt;
 UINT32 __xdata gpu32UartSpeed[] = {
 	2400, // 0
 	28800, // 1
@@ -224,6 +226,7 @@ void Timer0_ISR (void) interrupt(1)  //interrupt address is 0x000B
 {
 	TH0 = TH0_INIT;
 	TL0 = TL0_INIT;
+	gu16TimeCnt++;
 #if 0
 	if (P06) {
 		P06 = 0;
@@ -545,6 +548,131 @@ UINT8 state_switches(UINT8 au8SW, UINT8 *apu8SwNum)
 }
 #endif
 
+void act_by_keyinput(uint8 au8RxUART, uint8 * u8LineFiCmd, uint8 * u8LineFiAddr)
+{
+	static UINT8 __xdata u8Data = 0;
+	switch(au8RxUART) {
+		case '0' :
+			gu8UART = 0;
+			LINEFI_EN0 = 0;
+			printf_fast_f("0\n\r");
+			break;
+		case '1' :
+			gu8UART = 0;
+			LINEFI_EN0 = 1;
+			printf_fast_f("1\n\r");
+			break;
+		case '2' :
+			gu8UART = 0;
+			LINEFI_TX = 0;
+			printf_fast_f("LINEFI_TX=0\n\r");
+			break;
+		case '3' :
+			gu8UART = 0;
+			LINEFI_TX = 1;
+			printf_fast_f("LINEFI_TX=1\n\r");
+			break;
+		case '4' :
+			gu8UART = 0;
+			if (LINEFI_EN0 == 0) {
+				LINEFI_TX = 1;
+			}
+			TOGGLE(LINEFI_EN0);
+			printf_fast_f("LINEFI_EN0=");
+			printf_fast_f("%d\n\r", LINEFI_EN0);
+			break;
+		case '5' :
+			gu8UART = 0;
+			TOGGLE(LINEFI_TX);
+			printf_fast_f("LINEFI_TX=%d\n\r", LINEFI_TX);
+			break;
+		case '6' :
+			TOGGLE(LINEFI_EN1);
+			printf_fast_f("LINEFI_EN1=");
+			printf_fast_f("%d\n\r", LINEFI_EN1);
+			break;
+		case '7' :
+			TOGGLE(LINEFI_EN2);
+			printf_fast_f("LINEFI_EN2=");
+			printf_fast_f("%d\n\r", LINEFI_EN2);
+			break;
+
+
+
+		case 'h' : // <<
+			(*u8LineFiAddr)--;
+			if (*u8LineFiCmd == 1) {
+				printf_fast_f("uart speed: %lu:\n\r", gpu32UartSpeed[*u8LineFiAddr]);
+			}
+			else {
+				printf_fast_f("address: %d\n\r", *u8LineFiAddr);
+			}
+			break;
+		case 'j' : //  down
+			(*u8LineFiCmd)--;
+			printf_fast_f("command: %d\n\r", *u8LineFiCmd);
+			break;
+		case 'k' : // up
+			(*u8LineFiCmd)++;
+			printf_fast_f("command: %d\n\r", *u8LineFiCmd);
+			break;
+		case 'l' : // >>
+			(*u8LineFiAddr)++;
+			if (*u8LineFiCmd == 1) {
+				printf_fast_f("uart speed: %lu:\n\r", gpu32UartSpeed[*u8LineFiAddr]);
+			}
+			else {
+				printf_fast_f("address: %d\n\r", *u8LineFiAddr);
+			}
+			break;
+		case 's' :
+			switch (*u8LineFiCmd ) {
+				case 0 : // address setting
+					Send_Data_To_UART1((((*u8LineFiAddr)<<4)&0xF0) | (*u8LineFiCmd)&0x0F);
+					printf_fast_f("LineFi Sending: 0x%x:\n\r", ((*u8LineFiAddr)<<4) | *u8LineFiCmd);
+					printf_fast_f("address: 0x%d:\n\r", *u8LineFiAddr);
+					break;
+				case 1 : // uart speed setting
+					Send_Data_To_UART1((((*u8LineFiAddr)<<4)&0xF0) | (*u8LineFiCmd)&0x0F);
+					printf_fast_f("LineFi Sending: 0x%x:\n\r", ((*u8LineFiAddr)<<4) | *u8LineFiCmd);
+					printf_fast_f("uart speed: %lu:\n\r", gpu32UartSpeed[*u8LineFiAddr]);
+					break;
+				default :
+					Send_Data_To_UART1((((*u8LineFiAddr)<<4)&0xF0) | (*u8LineFiCmd)&0x0F);
+					printf_fast_f("LineFi Sending: 0x%x:\n\r", ((*u8LineFiAddr)<<4) | *u8LineFiCmd);
+					break;
+			}
+			break;
+		case 'u' :
+			printf_fast_f("uart speed: %lu:\n\r", gpu32UartSpeed[*u8LineFiAddr]);
+			InitialUART1_Timer3(gpu32UartSpeed[*u8LineFiAddr]);
+			break;
+
+		case 'S' :
+			Send_Data_To_UART1(u8Data);
+			printf_fast_f("LineFi Sending: %d(0x%x)\n\r", u8Data, u8Data);
+			break;
+		case '+' :
+			u8Data++;
+			printf_fast_f("send data %d(0x%x)\n\r", u8Data, u8Data);
+			break;
+		case '-' :
+			u8Data--;
+			printf_fast_f("send data %d(0x%x)\n\r", u8Data, u8Data);
+			break;
+
+		case 'a' :
+			Send_Data_To_UART1(0x11);
+			break;
+		case 'b' :
+			Send_Data_To_UART1(0x12);
+			break;
+		case 'c' :
+			Send_Data_To_UART1(0x13);
+			break;
+	}
+}
+
 /************************************************************************************************************
  *    Main function 
  ************************************************************************************************************/
@@ -558,7 +686,6 @@ void main (void)
 	UINT8 u8StateRxCSC = STATE_RxCSC_STOP;
 	UINT8 u8LineFiAddr = 1;
 	UINT8 u8LineFiSpeed = 1;
-	UINT8 u8Data = 0;
 	UINT8 u8LineFiCmd = 1;
 	UINT8 u8PwrOnFirstFlag = 1;
 	UINT8 u8SwNum;
@@ -645,130 +772,10 @@ void main (void)
 				default :
 					switch(u8State_Uart0_input) {
 						case UART0_INPUT_MODE0 :
-
-							switch(u8RxUART) {
-
-								case '0' :
-									gu8UART = 0;
-									LINEFI_EN0 = 0;
-									printf_fast_f("0\n\r");
-									break;
-								case '1' :
-									gu8UART = 0;
-									LINEFI_EN0 = 1;
-									printf_fast_f("1\n\r");
-									break;
-								case '2' :
-									gu8UART = 0;
-									LINEFI_TX = 0;
-									printf_fast_f("LINEFI_TX=0\n\r");
-									break;
-								case '3' :
-									gu8UART = 0;
-									LINEFI_TX = 1;
-									printf_fast_f("LINEFI_TX=1\n\r");
-									break;
-								case '4' :
-									gu8UART = 0;
-									if (LINEFI_EN0 == 0) {
-										LINEFI_TX = 1;
-									}
-									TOGGLE(LINEFI_EN0);
-									printf_fast_f("LINEFI_EN0=");
-									printf_fast_f("%d\n\r", LINEFI_EN0);
-									break;
-								case '5' :
-									gu8UART = 0;
-									TOGGLE(LINEFI_TX);
-									printf_fast_f("LINEFI_TX=%d\n\r", LINEFI_TX);
-									break;
-								case '6' :
-									TOGGLE(LINEFI_EN1);
-									printf_fast_f("LINEFI_EN1=");
-									printf_fast_f("%d\n\r", LINEFI_EN1);
-									break;
-								case '7' :
-									TOGGLE(LINEFI_EN2);
-									printf_fast_f("LINEFI_EN2=");
-									printf_fast_f("%d\n\r", LINEFI_EN2);
-									break;
-
-
-
-								case 'h' : // <<
-									u8LineFiAddr--;
-									if (u8LineFiCmd == 1) {
-										printf_fast_f("uart speed: %lu:\n\r", gpu32UartSpeed[u8LineFiAddr]);
-									}
-									else {
-										printf_fast_f("address: %d\n\r", u8LineFiAddr);
-									}
-									break;
-								case 'j' : //  down
-									u8LineFiCmd--;
-									printf_fast_f("command: %d\n\r", u8LineFiCmd);
-									break;
-								case 'k' : // up
-									u8LineFiCmd++;
-									printf_fast_f("command: %d\n\r", u8LineFiCmd);
-									break;
-								case 'l' : // >>
-									u8LineFiAddr++;
-									if (u8LineFiCmd == 1) {
-										printf_fast_f("uart speed: %lu:\n\r", gpu32UartSpeed[u8LineFiAddr]);
-									}
-									else {
-										printf_fast_f("address: %d\n\r", u8LineFiAddr);
-									}
-									break;
-								case 's' :
-									switch (u8LineFiCmd ) {
-										case 0 : // address setting
-											Send_Data_To_UART1(((u8LineFiAddr<<4)&0xF0) | (u8LineFiCmd)&0x0F);
-											printf_fast_f("LineFi Sending: 0x%x:\n\r", (u8LineFiAddr<<4) | u8LineFiCmd);
-											printf_fast_f("address: 0x%d:\n\r", u8LineFiAddr);
-											break;
-										case 1 : // uart speed setting
-											Send_Data_To_UART1(((u8LineFiAddr<<4)&0xF0) | (u8LineFiCmd)&0x0F);
-											printf_fast_f("LineFi Sending: 0x%x:\n\r", (u8LineFiAddr<<4) | u8LineFiCmd);
-											printf_fast_f("uart speed: %lu:\n\r", gpu32UartSpeed[u8LineFiAddr]);
-											break;
-										default :
-											Send_Data_To_UART1(((u8LineFiAddr<<4)&0xF0) | (u8LineFiCmd)&0x0F);
-											printf_fast_f("LineFi Sending: 0x%x:\n\r", (u8LineFiAddr<<4) | u8LineFiCmd);
-											break;
-									}
-									break;
-								case 'u' :
-									printf_fast_f("uart speed: %lu:\n\r", gpu32UartSpeed[u8LineFiAddr]);
-									InitialUART1_Timer3(gpu32UartSpeed[u8LineFiAddr]);
-									break;
-
-								case 'S' :
-									Send_Data_To_UART1(u8Data);
-									printf_fast_f("LineFi Sending: %d(0x%x)\n\r", u8Data, u8Data);
-									break;
-								case '+' :
-									u8Data++;
-									printf_fast_f("send data %d(0x%x)\n\r", u8Data, u8Data);
-									break;
-								case '-' :
-									u8Data--;
-									printf_fast_f("send data %d(0x%x)\n\r", u8Data, u8Data);
-									break;
-
-								case 'a' :
-									Send_Data_To_UART1(0x11);
-									break;
-								case 'b' :
-									Send_Data_To_UART1(0x12);
-									break;
-								case 'c' :
-									Send_Data_To_UART1(0x13);
-									break;
-							}
+							act_by_keyinput(u8RxUART, &u8LineFiCmd, &u8LineFiAddr);
 							break;
 						case UART0_INPUT_MODE1 :
+							printf_fast_f("%c",u8RxUART);
 							break;
 						case UART0_INPUT_MODE2 :
 							break;
@@ -980,9 +987,6 @@ void main (void)
 							break;
 					}
 #endif
-
-
-					break;
 			} //switch (state_switches((SW_U<<0)| (SW_R<<1)| (SW_L<<2)| (SW_D<<3) | (SW_C<<4), &u8SwNum))
 		}
 		
