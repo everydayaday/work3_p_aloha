@@ -63,9 +63,9 @@
 
 const char * __xdata  gcUartInputMode[MAX_STATE_UART0_INPUT] = {
 	"UART0_INPUT_MODE0",
-	"UART0_INPUT_MODE1",
-	"UART0_INPUT_MODE2",
-	"UART0_INPUT_MODE3"
+	"UART0_INPUT_MODE1:string input",
+	"UART0_INPUT_MODE2:mimic 5keys on board",
+	"UART0_INPUT_MODE3:slave gpio pin setting"
 };
 
 enum {
@@ -805,8 +805,56 @@ void main (void)
 						//	printf_fast_f("%c",u8RxUART);
 							break;
 						case UART0_INPUT_MODE2 :
+							switch(u8RxUART) {
+								case 'f' : // down SW1
+									u8LineFiAddr--;
+									if (u8LineFiAddr == 0) {
+										u8LineFiAddr = 1;
+									}
+
+									printf_fast_f("address: %d\n\r", u8LineFiAddr);
+									break;
+								case 'g' : // right SW2
+									u8LineFiCmd--;
+									if (u8LineFiCmd == 0) {
+										u8LineFiCmd = 1;
+									}
+
+
+									printf_fast_f("command: %d\n\r", u8LineFiCmd);
+									break;
+
+								case 'h' : // center SW3
+									stLineFiPkt.u8Addr = u8LineFiAddr;
+									stLineFiPkt.u8Type = u8LineFiCmd;
+									if (u8LineFiAddr&1) {
+										stLineFiPkt.pu8Data = gpu8Data;
+									}
+									else {
+										stLineFiPkt.pu8Data = gpu8Data2;
+									}
+									send_linefi_packet(&stLineFiPkt);
+									break;
+
+								case 'j' : //  left SW4
+									u8LineFiCmd++;
+									if (u8LineFiCmd == 101) {
+										u8LineFiCmd = 100;
+									}
+									printf_fast_f("command: %d\n\r", u8LineFiCmd);
+
+
+									break;
+								case 'k' : // up SW5
+									u8LineFiAddr++;
+									if (u8LineFiAddr == 16) {
+										u8LineFiAddr = 15;
+									}
+									printf_fast_f("address: %d\n\r", u8LineFiAddr);
+									break;
+							}
 							break;
-						case UART0_INPUT_MODE3 :
+						case UART0_INPUT_MODE3 : // slave gpio pin setting
 							break;
 						case UART0_INPUT_MODE4 :
 							break;
