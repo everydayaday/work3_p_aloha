@@ -988,9 +988,11 @@ void main (void)
 		
 #endif
 
+#if 0
 		if (Receive_Data_From_UART0_nb(&u8RxUART)) {
 			Send_Data_To_UART1(u8RxUART);
 		}
+#endif
 
 #if 0
 		if ( P13 == 0 ) {
