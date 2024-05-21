@@ -237,6 +237,13 @@ void Timer0_ISR (void) interrupt(1)  //interrupt address is 0x000B
 #endif
 } //void Timer0_ISR (void) __interrupt 1  //interrupt address is 0x000B
 
+void pin_interrupt_isr(void) interrupt(7)
+{
+	if (PIF == 0x10) {
+	}
+	PIF = 0;
+}// void pin_interrupt_isr (void) interrupt(7)
+
 UINT8 chk_manchester(UINT8 c)
 {
 	UINT8 i;
@@ -548,10 +555,25 @@ UINT8 state_switches(UINT8 au8SW, UINT8 *apu8SwNum)
 }
 #endif
 
+#if 1
+void printoutbuf(uint8 aucBufIdx, char * apcBuf)
+{
+	uint8 __xdata i;
+	for (i=0;i<aucBufIdx;i++) {
+		printf_fast_f("%c", *apcBuf++);
+	}
+	printf_fast_f("\r\n");
+}
+#endif
+
 void act_by_keyinput(uint8 au8RxUART, uint8 * u8LineFiCmd, uint8 * u8LineFiAddr)
 {
 	static UINT8 __xdata u8Data = 0;
 	switch(au8RxUART) {
+		case 't' :
+			printf_fast_f("%d\n\r", gu16TimeCnt);
+			gu16TimeCnt = 0;
+			break;
 		case '0' :
 			gu8UART = 0;
 			LINEFI_EN0 = 0;
@@ -692,6 +714,9 @@ void main (void)
 
 	uint8 u8State_Uart0_input = UART0_INPUT_MODE0;
 
+	char __xdata pcBuf[100];
+	uint8  __xdata ucBufIdx = 0;
+
 	linefi_packet_t __xdata pstLineFiPkt[] = {
 		{1,2,1,10,5, gpu8Data},
 		{1,2,2,10,5, gpu8Data},
@@ -775,7 +800,9 @@ void main (void)
 							act_by_keyinput(u8RxUART, &u8LineFiCmd, &u8LineFiAddr);
 							break;
 						case UART0_INPUT_MODE1 :
-							printf_fast_f("%c",u8RxUART);
+							gu16TimeCnt = 0;
+							pcBuf[ucBufIdx++] = u8RxUART;
+						//	printf_fast_f("%c",u8RxUART);
 							break;
 						case UART0_INPUT_MODE2 :
 							break;
@@ -787,6 +814,31 @@ void main (void)
 					break;
 			} //switch(u8RxUART)
 		} //if (Receive_Data_From_UART0_nb(&u8RxUART))
+		else {
+			switch(u8State_Uart0_input) {
+				case UART0_INPUT_MODE0 :
+			//		act_by_keyinput(u8RxUART, &u8LineFiCmd, &u8LineFiAddr);
+					break;
+				case UART0_INPUT_MODE1 :
+//					printf_fast_f("%c",u8RxUART);
+					{
+						if (gu16TimeCnt > 10 && ucBufIdx != 0) {
+							printoutbuf(ucBufIdx, pcBuf);
+							ucBufIdx = 0;
+						}
+					}
+					break;
+				case UART0_INPUT_MODE2 :
+					break;
+				case UART0_INPUT_MODE3 :
+					break;
+				case UART0_INPUT_MODE4 :
+					break;
+			} //switch(u8State_Uart0_input)
+
+
+		}
+
 #endif
 //		if (Receive_Data_From_UART1_nb(&u8RxUART)) {
 
