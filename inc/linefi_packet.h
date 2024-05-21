@@ -39,10 +39,10 @@ typedef struct {
 	uint8 * pu8Data;
 } linefi_packet_t;
 
-uint8 size_linefi_packet(linefi_packet_t * apstLineFiVPM);
-void send_linefi_packet(linefi_packet_t * apstLineFiVPM);
-uint8 cp_buf2linefipacket(uint8 au8Size, uint8 * apu8RxBuf, linefi_packet_t * apstLineFiVPM);
-void print_linefipacket(linefi_packet_t * apstLineFiVPM);
+uint8 size_linefi_packet(linefi_packet_t * apstLineFiPkt);
+void send_linefi_packet(linefi_packet_t * apstLineFiPkt);
+uint8 cp_buf2linefipacket(uint8 au8Size, uint8 * apu8RxBuf, linefi_packet_t * apstLineFiPkt);
+void print_linefipacket(linefi_packet_t * apstLineFiPkt);
 uint8 crc8( uint8 *input_str, uint8 num_bytes, uint8 au8CRC);
 void print_raw_packet(uint8 au8Size, uint8 * apu8Data);
 

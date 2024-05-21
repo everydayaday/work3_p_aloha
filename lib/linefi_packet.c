@@ -45,40 +45,40 @@ const char * __xdata gpcTypeStr[] = {
 	"Type_None"
 };
 
-uint8 size_linefi_packet(linefi_packet_t * apstLineFiVPM)
+uint8 size_linefi_packet(linefi_packet_t * apstLineFiPkt)
 {
-	return apstLineFiVPM->u8Size + sizeof(linefi_packet_t) - sizeof(uint8 *);
+	return apstLineFiPkt->u8Size + sizeof(linefi_packet_t) - sizeof(uint8 *);
 }
 
-uint8 calc_crc_linefi_packet_packet(linefi_packet_t * apstLineFiVPM)
+uint8 calc_crc_linefi_packet_packet(linefi_packet_t * apstLineFiPkt)
 {
-	uint8 u8CRC = crc8((uint8 *)apstLineFiVPM, 4, 0xFF);
-	u8CRC = crc8((uint8 *)(apstLineFiVPM->pu8Data), apstLineFiVPM->u8Size, u8CRC);
+	uint8 u8CRC = crc8((uint8 *)apstLineFiPkt, 4, 0xFF);
+	u8CRC = crc8((uint8 *)(apstLineFiPkt->pu8Data), apstLineFiPkt->u8Size, u8CRC);
 
 	return u8CRC;
 }
 
-void add_crc_linefi_packet_packet(linefi_packet_t * apstLineFiVPM)
+void add_crc_linefi_packet_packet(linefi_packet_t * apstLineFiPkt)
 {
-	uint8 u8CRC = calc_crc_linefi_packet_packet(apstLineFiVPM);
-	apstLineFiVPM->u8CRC = u8CRC;
+	uint8 u8CRC = calc_crc_linefi_packet_packet(apstLineFiPkt);
+	apstLineFiPkt->u8CRC = u8CRC;
 }
 
-uint8 chk_crc_linefi_packet_packet(linefi_packet_t * apstLineFiVPM)
+uint8 chk_crc_linefi_packet_packet(linefi_packet_t * apstLineFiPkt)
 {
-	uint8 u8CRC = calc_crc_linefi_packet_packet(apstLineFiVPM);
+	uint8 u8CRC = calc_crc_linefi_packet_packet(apstLineFiPkt);
 
-	if (apstLineFiVPM->u8CRC == u8CRC) {
+	if (apstLineFiPkt->u8CRC == u8CRC) {
 		return CRC_OK;
 	}
 	return CRC_NOT_OK;
 }
 
-void send_linefi_packet(linefi_packet_t * apstLineFiVPM)
+void send_linefi_packet(linefi_packet_t * apstLineFiPkt)
 {
-	uint8 u8CRC = calc_crc_linefi_packet_packet(apstLineFiVPM);
+	uint8 u8CRC = calc_crc_linefi_packet_packet(apstLineFiPkt);
 
-	uint8 * pu8Buf = (uint8 *) apstLineFiVPM;
+	uint8 * pu8Buf = (uint8 *) apstLineFiPkt;
 	Send_Data_To_UART1(*pu8Buf++);
 	Send_Data_To_UART1(*pu8Buf++);
 	Send_Data_To_UART1(*pu8Buf++);
@@ -86,48 +86,48 @@ void send_linefi_packet(linefi_packet_t * apstLineFiVPM)
 	//Send_Data_To_UART1(*pu8Buf++); //CRC
 	Send_Data_To_UART1(u8CRC); //CRC
 	uint8 i;
-	for (i=0;i<apstLineFiVPM->u8Size;i++) {
-		Send_Data_To_UART1(*(apstLineFiVPM->pu8Data+i));
+	for (i=0;i<apstLineFiPkt->u8Size;i++) {
+		Send_Data_To_UART1(*(apstLineFiPkt->pu8Data+i));
 	}
 }
 
-uint8 cp_buf2linefipacket(uint8 au8Size, uint8 * apu8RxBuf, linefi_packet_t * apstLineFiVPM)
+uint8 cp_buf2linefipacket(uint8 au8Size, uint8 * apu8RxBuf, linefi_packet_t * apstLineFiPkt)
 {
 	if (au8Size < 5) {
 		return CONV_ERR_TOO_SMALLSIZE;
 	}
 
-	uint8 * pu8Buf = (uint8 *) apstLineFiVPM;
+	uint8 * pu8Buf = (uint8 *) apstLineFiPkt;
 	*pu8Buf++ = *apu8RxBuf++;
 	*pu8Buf++ = *apu8RxBuf++;
 	*pu8Buf++ = *apu8RxBuf++;
 	*pu8Buf++ = *apu8RxBuf++;
 	*pu8Buf++ = *apu8RxBuf++;
 	uint8 i;
-	for (i=0;i<apstLineFiVPM->u8Size;i++) {
-		apstLineFiVPM->pu8Data[i] = *apu8RxBuf++;
+	for (i=0;i<apstLineFiPkt->u8Size;i++) {
+		apstLineFiPkt->pu8Data[i] = *apu8RxBuf++;
 	}
 
-	if (chk_crc_linefi_packet_packet(apstLineFiVPM) == CRC_NOT_OK) {
+	if (chk_crc_linefi_packet_packet(apstLineFiPkt) == CRC_NOT_OK) {
 		return CONV_ERR_CRC;
 	}
 	return CONV_OK;
 }
 
-void print_linefipacket(linefi_packet_t * apstLineFiVPM)
+void print_linefipacket(linefi_packet_t * apstLineFiPkt)
 {
 	printf_fast_f("-------------------------------\r\n");
-	printf_fast_f("Ver : %d\r\n", apstLineFiVPM->u8Ver);
-	printf_fast_f("Type: %d(%s)\r\n", apstLineFiVPM->u8Type, gpcTypeStr[apstLineFiVPM->u8Type]);
-	//printf_fast_f("Type: %d(%s)\r\n", apstLineFiVPM->u8Type, "kkk");
-	//printf_fast_f("Type: %d\r\n", apstLineFiVPM->u8Type);
-	printf_fast_f("Addr: %d\r\n", apstLineFiVPM->u8Addr);
-	printf_fast_f("Size: %d\r\n", apstLineFiVPM->u8Size);
-	printf_fast_f("CRC comp : %d %d\r\n", apstLineFiVPM->u8CRC, calc_crc_linefi_packet_packet(apstLineFiVPM));
+	printf_fast_f("Ver : %d\r\n", apstLineFiPkt->u8Ver);
+	printf_fast_f("Type: %d(%s)\r\n", apstLineFiPkt->u8Type, gpcTypeStr[apstLineFiPkt->u8Type]);
+	//printf_fast_f("Type: %d(%s)\r\n", apstLineFiPkt->u8Type, "kkk");
+	//printf_fast_f("Type: %d\r\n", apstLineFiPkt->u8Type);
+	printf_fast_f("Addr: %d\r\n", apstLineFiPkt->u8Addr);
+	printf_fast_f("Size: %d\r\n", apstLineFiPkt->u8Size);
+	printf_fast_f("CRC comp : %d %d\r\n", apstLineFiPkt->u8CRC, calc_crc_linefi_packet_packet(apstLineFiPkt));
 	printf_fast_f("DATA: ");
 	uint8 i;
-	for (i=0;i<apstLineFiVPM->u8Size;i++) {
-		printf_fast_f("0x%x ", apstLineFiVPM->pu8Data[i]);
+	for (i=0;i<apstLineFiPkt->u8Size;i++) {
+		printf_fast_f("0x%x ", apstLineFiPkt->pu8Data[i]);
 	}
 	printf_fast_f("\r\n");
 	printf_fast_f("-------------------------------\r\n");
