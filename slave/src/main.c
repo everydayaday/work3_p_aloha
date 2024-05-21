@@ -180,12 +180,12 @@ enum {
 };
 
 enum { // Voltage Polarity Modulation
-	STATE_RxVPM_INIT,
-	STATE_RxVPM_START,
-	STATE_RxVPM_END,
-	STATE_RxVPM_A,
-	STATE_RxVPM_B,
-	STATE_RxVPM_NONE
+	STATE_RxPKT_INIT,
+	STATE_RxPKT_START,
+	STATE_RxPKT_END,
+	STATE_RxPKT_A,
+	STATE_RxPKT_B,
+	STATE_RxPKT_NONE
 };
 
 enum {
@@ -646,9 +646,9 @@ UINT8 chk_my_addr(UINT8 au8MyAddr, UINT8 au8RxData)
 	return 0;
 }
 
-void process_my_packet(linefi_packet_t * apstLineFiVPM)
+void process_my_packet(linefi_packet_t * apstLineFiPkt)
 {
-	switch(apstLineFiVPM->u8Type) {
+	switch(apstLineFiPkt->u8Type) {
 		case Type_SetAddr :
 			break;
 		case Type_Bcast :
@@ -658,14 +658,14 @@ void process_my_packet(linefi_packet_t * apstLineFiVPM)
 		case Type_Ucast :
 			break;
 		case Type_SetLED :
-			LED_R = apstLineFiVPM->pu8Data[0];
-			LED_G = apstLineFiVPM->pu8Data[1];
-			LED_B = apstLineFiVPM->pu8Data[2];
+			LED_R = apstLineFiPkt->pu8Data[0];
+			LED_G = apstLineFiPkt->pu8Data[1];
+			LED_B = apstLineFiPkt->pu8Data[2];
 			break;
 		case Type_CtrlMotor :
-			MOTOR_EN = apstLineFiVPM->pu8Data[0];
-			MOTOR_CW = apstLineFiVPM->pu8Data[1];
-			MOTOR_CCW = apstLineFiVPM->pu8Data[2];
+			MOTOR_EN = apstLineFiPkt->pu8Data[0];
+			MOTOR_CW = apstLineFiPkt->pu8Data[1];
+			MOTOR_CCW = apstLineFiPkt->pu8Data[2];
 			break;
 		case Type_ReadAddr :
 			printf_fast_f("My address is 0x%x\r\n", gu8MyAddr);
@@ -673,13 +673,13 @@ void process_my_packet(linefi_packet_t * apstLineFiVPM)
 	}
 }
 
-void process_all_packet(linefi_packet_t * apstLineFiVPM)
+void process_all_packet(linefi_packet_t * apstLineFiPkt)
 {
-	switch(apstLineFiVPM->u8Type) {
+	switch(apstLineFiPkt->u8Type) {
 		case Type_SetAddr :
 			if (SWITCH == SW_ON) {
-				printf_fast_f("set address as %d\r\n", apstLineFiVPM->u8Addr);
-				gu8MyAddr = apstLineFiVPM->u8Addr;
+				printf_fast_f("set address as %d\r\n", apstLineFiPkt->u8Addr);
+				gu8MyAddr = apstLineFiPkt->u8Addr;
 				Erase_APROM_Page(BASE_ADDRESS);
 				Write_APROM_BYTE(BASE_ADDRESS+0, gu8MyAddr);
 			}
@@ -689,16 +689,16 @@ void process_all_packet(linefi_packet_t * apstLineFiVPM)
 		case Type_Mcast :
 			break;
 		case Type_Ucast :
-			if (gu8MyAddr == apstLineFiVPM->u8Addr) {
-				process_my_packet(apstLineFiVPM);
+			if (gu8MyAddr == apstLineFiPkt->u8Addr) {
+				process_my_packet(apstLineFiPkt);
 			}
 			break;
 		case Type_ReadAddr :
 			printf_fast_f("My address is %d\r\n", gu8MyAddr);
 			break;
 		default :
-			if (gu8MyAddr == apstLineFiVPM->u8Addr) {
-				process_my_packet(apstLineFiVPM);
+			if (gu8MyAddr == apstLineFiPkt->u8Addr) {
+				process_my_packet(apstLineFiPkt);
 			}
 			break;
 	}
@@ -728,11 +728,11 @@ void main (void)
 	UINT8 u8Data = 0;
 	UINT8 u8LineFiCmd = 1;
 	UINT8 u8PwrOnFirstFlag = 1;
-	UINT8 u8StateRxVPM = STATE_RxVPM_INIT;
+	UINT8 u8StateRxPkt = STATE_RxPKT_INIT;
 
 	UINT8 pu8RxUART[30];
 
-	linefi_packet_t stLineFiVPM = {
+	linefi_packet_t stLineFiPkt = {
 		1, //UINT8 u8Ver;
 		2, //UINT8 u8Type;
 		3, //UINT8 u8Addr;
@@ -866,26 +866,26 @@ void main (void)
 //			u8UartRx = UART_RX;
 		}
 #endif
-		switch(u8StateRxVPM) {
-			case STATE_RxVPM_INIT :
+		switch(u8StateRxPkt) {
+			case STATE_RxPKT_INIT :
 				if (Receive_Data_From_UART1_nb(&u8RxUART)) {
 					gu16TimeCnt = 0;
 					u8RxIdx = 0;
 					pu8RxUART[u8RxIdx++] = u8RxUART;
-					u8StateRxVPM = STATE_RxVPM_START;
+					u8StateRxPkt = STATE_RxPKT_START;
 				}
 			break;
-			case STATE_RxVPM_START :
+			case STATE_RxPKT_START :
 				if (Receive_Data_From_UART1_nb(&u8RxUART)) {
 					gu16TimeCnt = 0;
 					pu8RxUART[u8RxIdx++] = u8RxUART;
 				}
 				else if (gu16TimeCnt > 1000) { // 1msec넘으면
-					u8StateRxVPM = STATE_RxVPM_END;
+					u8StateRxPkt = STATE_RxPKT_END;
 				}
 			break;
 
-			case STATE_RxVPM_END :
+			case STATE_RxPKT_END :
 			switch(u8RxIdx) {
 				case 1 :
 					if (chk_my_addr(MY_ADDR, pu8RxUART[0])) {
@@ -893,7 +893,7 @@ void main (void)
 						printf_fast_f("Rx:%d\n\r", pu8RxUART[0]);
 						ctrl_rgbled(u8RxUART);
 					}
-					u8StateRxVPM = STATE_RxVPM_INIT;
+					u8StateRxPkt = STATE_RxPKT_INIT;
 					break;
 				default :
 					if ( u8RxIdx < 8) {
@@ -905,19 +905,19 @@ void main (void)
 						printf_fast_f("\n\r");
 					}
 					else {
-						cp_buf2linefipacket(u8RxIdx, pu8RxUART, &stLineFiVPM);
-						process_all_packet(&stLineFiVPM);
-						print_linefipacket(&stLineFiVPM);
+						cp_buf2linefipacket(u8RxIdx, pu8RxUART, &stLineFiPkt);
+						process_all_packet(&stLineFiPkt);
+						print_linefipacket(&stLineFiPkt);
 						if (gu8MyAddr == 0) {
-							print_linefipacket(&stLineFiVPM);
+							print_linefipacket(&stLineFiPkt);
 						}
 					}
 
-					u8StateRxVPM = STATE_RxVPM_INIT;
+					u8StateRxPkt = STATE_RxPKT_INIT;
 
 					break;
 			}
 			break;
-		} //switch(u8StateRxVPM)
+		} //switch(u8StateRxPkt)
 	} //while(1)
 }

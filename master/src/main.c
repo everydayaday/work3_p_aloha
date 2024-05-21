@@ -546,7 +546,7 @@ void main (void)
 	UINT8 u8PwrOnFirstFlag = 1;
 	UINT8 u8SwNum;
 
-	linefi_packet_t stLineFiVPM = {
+	linefi_packet_t stLineFiPkt = {
 		1, //UINT8 u8Ver;
 		2, //UINT8 u8Type;
 		3, //UINT8 u8Addr;
@@ -899,15 +899,15 @@ void main (void)
 							break;
 
 						case (1<<4) : // center SW3
-							stLineFiVPM.u8Addr = u8LineFiAddr;
-							stLineFiVPM.u8Type = u8LineFiCmd;
+							stLineFiPkt.u8Addr = u8LineFiAddr;
+							stLineFiPkt.u8Type = u8LineFiCmd;
 							if (u8LineFiAddr&1) {
-								stLineFiVPM.pu8Data = gpu8Data;
+								stLineFiPkt.pu8Data = gpu8Data;
 							}
 							else {
-								stLineFiVPM.pu8Data = gpu8Data2;
+								stLineFiPkt.pu8Data = gpu8Data2;
 							}
-							send_linefi_packet(&stLineFiVPM);
+							send_linefi_packet(&stLineFiPkt);
 							break;
 
 						case (1<<2) : //  left SW4
