@@ -688,19 +688,6 @@ void process_all_packet(linefi_packet_t * apstLineFiPkt)
 			break;
 		case Type_Mcast :
 			break;
-		case Type_Ucast :
-			if (gu8MyAddr == apstLineFiPkt->u8Addr) {
-				process_my_packet(apstLineFiPkt);
-			}
-			break;
-		case Type_ReadAddr :
-			printf_fast_f("My address is %d\r\n", gu8MyAddr);
-			break;
-		default :
-			if (gu8MyAddr == apstLineFiPkt->u8Addr) {
-				process_my_packet(apstLineFiPkt);
-			}
-			break;
 	}
 }
 
@@ -907,9 +894,9 @@ void main (void)
 					else {
 						cp_buf2linefipacket(u8RxIdx, pu8RxUART, &stLineFiPkt);
 						process_all_packet(&stLineFiPkt);
-						print_linefipacket(&stLineFiPkt);
-						if (gu8MyAddr == 0) {
-							print_linefipacket(&stLineFiPkt);
+						//print_linefipacket(&stLineFiPkt);
+						if (gu8MyAddr == stLineFiPkt.u8Addr) {
+							process_my_packet(&stLineFiPkt);
 						}
 					}
 
