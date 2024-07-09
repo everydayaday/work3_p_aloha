@@ -55,14 +55,14 @@ __code __at (BASE_ADDRESS) char gpcEEPROM[128] = "";
 #define UART_RX 	P02
 #define SEL_RX_POL 	P04
 
-#else //라인파이 슬레이브
+#else //라인파이 슬레이브 240709
 
 #define UART_TX 	P16
 #define SWITCH 		P15
 #define LED_B 		P12
 #define LED_G 		P13
 #define LED_R 		P14
-#define MOTOR_EN 	P10
+//#define MOTOR_EN 	P10
 #define MOTOR_CW 	P00
 #define MOTOR_CCW 	P01
 #define PWR_OUT 	P03
@@ -444,7 +444,7 @@ void gpio_setup()
 	LED_B = 1;
 	LED_G = 1;
 	LED_R = 1;
-	MOTOR_EN = 0;
+//	MOTOR_EN = 0;
 	MOTOR_CW = 0;
 	MOTOR_CCW = 0;
 	SEL_RX_POL = 0;
@@ -663,7 +663,7 @@ void process_my_packet(linefi_packet_t * apstLineFiPkt)
 			LED_B = apstLineFiPkt->pu8Data[2];
 			break;
 		case Type_CtrlMotor :
-			MOTOR_EN = apstLineFiPkt->pu8Data[0];
+//			MOTOR_EN = apstLineFiPkt->pu8Data[0];
 			MOTOR_CW = apstLineFiPkt->pu8Data[1];
 			MOTOR_CCW = apstLineFiPkt->pu8Data[2];
 			break;
@@ -770,7 +770,7 @@ void main (void)
 	if (UART_RX == 0) {
 		SEL_RX_POL = 1;
 	}
-	MOTOR_EN = 1;
+//	MOTOR_EN = 1;
 
 	gu8MyAddr = gpcEEPROM[0]; // 0x00이면 펌웨어 쓴 직후
 
@@ -800,9 +800,10 @@ void main (void)
 					printf_fast_f("%d\n\r", LED_B);
 					break;
 				case '5' :
-					TOGGLE(MOTOR_EN);
-					printf_fast_f("MOTOR_EN=");
-					printf_fast_f("%d\n\r", MOTOR_EN);
+//					TOGGLE(MOTOR_EN);
+//					printf_fast_f("MOTOR_EN=");
+//					printf_fast_f("%d\n\r", MOTOR_EN);
+					printf_fast_f("no MOTOR_EN\r\n");
 					break;
 				case '6' :
 					TOGGLE(MOTOR_CW);
@@ -837,7 +838,7 @@ void main (void)
 				LED_G = (su8Cnt>>1)&1;
 				LED_B = (su8Cnt>>2)&1;
 
-				MOTOR_EN = su8Cnt&1;
+//				MOTOR_EN = su8Cnt&1;
 				MOTOR_CW = (su8Cnt>>1)&1;
 				MOTOR_CCW = (su8Cnt>>2)&1;
 
