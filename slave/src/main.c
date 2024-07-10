@@ -39,7 +39,7 @@ __code __at (BASE_ADDRESS) char gpcEEPROM[128] = "";
 
 #define __VERSION__ "Version 1.4 on 20231026\r\n"
 
-#define MY_ADDR (1)
+#define MY_ADDR (3)
 
 #if 0 // 정량펌프
 
@@ -86,6 +86,7 @@ __code __at (BASE_ADDRESS) char gpcEEPROM[128] = "";
 uint8 gu8MyAddr;
 
 UINT8 __xdata gpu8Data[20];
+UINT8 __xdata gu8MotorState = 0;
 
 UINT32 __xdata gpu32UartSpeed[] = {
 	2400, // 0
@@ -606,35 +607,54 @@ UINT8 state_switches(UINT8 au8SW, UINT8 *apu8SwNum)
 
 }
 #endif
-
-void ctrl_rgbled(UINT8 u8RxUART)
+void ctrl_rgbled_motor(UINT8 u8RxUART)
 {
 
 	//gu16RotCnt = (u8RxUART&0xF)*100 + 15*150 ; // 챔버 파라미터
 	if (u8RxUART) {
-		if (u8RxUART&0x1) {
-			LED_R = LED_ON;
+		if (u8RxUART&(1<<0)) {
+			TOGGLE(LED_R);
 		}
-		else {
-			LED_R = LED_OFF;
+
+		if (u8RxUART&(1<<1)) {
+			TOGGLE(LED_G);
 		}
-		if (u8RxUART&0x2) {
-			LED_G = LED_ON;
+
+		if (u8RxUART&(1<<2)) {
+			TOGGLE(LED_B);
 		}
-		else {
-			LED_G = LED_OFF;
-		}
-		if (u8RxUART&0x4) {
-			LED_B = LED_ON;
-		}
-		else {
-			LED_B = LED_OFF;
+
+		if (u8RxUART&(1<<3)) {
+			switch(gu8MotorState) {
+				case 0 :
+					MOTOR_CCW = 0;
+					MOTOR_CW = 0 ;
+					break;
+				case 1 :
+					MOTOR_CCW = 1;
+					MOTOR_CW = 0 ;
+					break;
+				case 2 :
+					MOTOR_CCW = 1;
+					MOTOR_CW = 1 ;
+					break;
+				case 3 :
+					MOTOR_CCW = 0;
+					MOTOR_CW = 1 ;
+					break;
+			}
+			gu8MotorState ++;
+			if (gu8MotorState == 4) {
+				gu8MotorState = 0;
+			}
 		}
 	}
 	else {
 		LED_R = LED_OFF;
 		LED_G = LED_OFF;
 		LED_B = LED_OFF;
+		MOTOR_CCW = 0;
+		MOTOR_CW = 0 ;
 	}
 }
 
@@ -881,7 +901,7 @@ void main (void)
 					if (chk_my_addr(MY_ADDR, pu8RxUART[0])) {
 						//				rot_motor(u8RxUART);
 						printf_fast_f("Rx:%d\n\r", pu8RxUART[0]);
-						ctrl_rgbled(u8RxUART);
+						ctrl_rgbled_motor(u8RxUART);
 					}
 					u8StateRxPkt = STATE_RxPKT_INIT;
 					break;
