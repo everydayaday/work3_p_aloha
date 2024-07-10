@@ -574,7 +574,7 @@ void printoutbuf(uint8 aucBufIdx, char * apcBuf)
 }
 #endif
 
-void act_by_one_key(uint8 au8RxUART, uint8 * u8LineFiCmd, uint8 * u8LineFiAddr)
+void act_by_one_key(uint8 au8RxUART, uint8 * apu8LineFiCmd, uint8 * apu8LineFiAddr)
 {
 	static UINT8 __xdata u8Data = 0;
 	switch(au8RxUART) {
@@ -632,52 +632,52 @@ void act_by_one_key(uint8 au8RxUART, uint8 * u8LineFiCmd, uint8 * u8LineFiAddr)
 
 
 		case 'h' : // <<
-			(*u8LineFiAddr)--;
-			if (*u8LineFiCmd == 1) {
-				printf_fast_f("uart speed: %lu:\n\r", gpu32UartSpeed[*u8LineFiAddr]);
+			(*apu8LineFiAddr)--;
+			if (*apu8LineFiCmd == 1) {
+				printf_fast_f("uart speed: %lu:\n\r", gpu32UartSpeed[*apu8LineFiAddr]);
 			}
 			else {
-				printf_fast_f("address: %d\n\r", *u8LineFiAddr);
+				printf_fast_f("address: %d\n\r", *apu8LineFiAddr);
 			}
 			break;
 		case 'j' : //  down
-			(*u8LineFiCmd)--;
-			printf_fast_f("command: %d\n\r", *u8LineFiCmd);
+			(*apu8LineFiCmd)--;
+			printf_fast_f("command: %d\n\r", *apu8LineFiCmd);
 			break;
 		case 'k' : // up
-			(*u8LineFiCmd)++;
-			printf_fast_f("command: %d\n\r", *u8LineFiCmd);
+			(*apu8LineFiCmd)++;
+			printf_fast_f("command: %d\n\r", *apu8LineFiCmd);
 			break;
 		case 'l' : // >>
-			(*u8LineFiAddr)++;
-			if (*u8LineFiCmd == 1) {
-				printf_fast_f("uart speed: %lu:\n\r", gpu32UartSpeed[*u8LineFiAddr]);
+			(*apu8LineFiAddr)++;
+			if (*apu8LineFiCmd == 1) {
+				printf_fast_f("uart speed: %lu:\n\r", gpu32UartSpeed[*apu8LineFiAddr]);
 			}
 			else {
-				printf_fast_f("address: %d\n\r", *u8LineFiAddr);
+				printf_fast_f("address: %d\n\r", *apu8LineFiAddr);
 			}
 			break;
 		case 's' :
-			switch (*u8LineFiCmd) {
+			switch (*apu8LineFiCmd) {
 				case 0 : // address setting
-					send_octet_to_linefi((((*u8LineFiAddr)<<4)&0xF0) | (*u8LineFiCmd)&0x0F);
-					printf_fast_f("LineFi Sending: 0x%x:\n\r", ((*u8LineFiAddr)<<4) | *u8LineFiCmd);
-					printf_fast_f("address: 0x%d:\n\r", *u8LineFiAddr);
+					send_octet_to_linefi((((*apu8LineFiAddr)<<4)&0xF0) | (*apu8LineFiCmd)&0x0F);
+					printf_fast_f("LineFi Sending: 0x%x:\n\r", ((*apu8LineFiAddr)<<4) | *apu8LineFiCmd);
+					printf_fast_f("address: 0x%d:\n\r", *apu8LineFiAddr);
 					break;
 				case 1 : // uart speed setting
-					send_octet_to_linefi((((*u8LineFiAddr)<<4)&0xF0) | (*u8LineFiCmd)&0x0F);
-					printf_fast_f("LineFi Sending: 0x%x:\n\r", ((*u8LineFiAddr)<<4) | *u8LineFiCmd);
-					printf_fast_f("uart speed: %lu:\n\r", gpu32UartSpeed[*u8LineFiAddr]);
+					send_octet_to_linefi((((*apu8LineFiAddr)<<4)&0xF0) | (*apu8LineFiCmd)&0x0F);
+					printf_fast_f("LineFi Sending: 0x%x:\n\r", ((*apu8LineFiAddr)<<4) | *apu8LineFiCmd);
+					printf_fast_f("uart speed: %lu:\n\r", gpu32UartSpeed[*apu8LineFiAddr]);
 					break;
 				default :
-					send_octet_to_linefi((((*u8LineFiAddr)<<4)&0xF0) | (*u8LineFiCmd)&0x0F);
-					printf_fast_f("LineFi Sending: 0x%x:\n\r", ((*u8LineFiAddr)<<4) | *u8LineFiCmd);
+					send_octet_to_linefi((((*apu8LineFiAddr)<<4)&0xF0) | (*apu8LineFiCmd)&0x0F);
+					printf_fast_f("LineFi Sending: 0x%x:\n\r", ((*apu8LineFiAddr)<<4) | *apu8LineFiCmd);
 					break;
 			}
 			break;
 		case 'u' :
-			printf_fast_f("uart speed: %lu:\n\r", gpu32UartSpeed[*u8LineFiAddr]);
-			InitialUART1_Timer3(gpu32UartSpeed[*u8LineFiAddr]);
+			printf_fast_f("uart speed: %lu:\n\r", gpu32UartSpeed[*apu8LineFiAddr]);
+			InitialUART1_Timer3(gpu32UartSpeed[*apu8LineFiAddr]);
 			break;
 
 		case 'S' :
@@ -760,6 +760,7 @@ void main (void)
 
 	gu8UART = 0;
 	printf_fast_f("This is UART0\n\r");
+	printf_fast_f("LineFi Master\n\r");
 	gu8UART = 1;
 	printf_fast_f("This is UART1\n\r");
 	UINT8 u8RxBufIdx = 0;
