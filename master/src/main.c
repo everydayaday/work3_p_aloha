@@ -574,6 +574,24 @@ void printoutbuf(uint8 aucBufIdx, char * apcBuf)
 }
 #endif
 
+void print_help()
+{
+		printf_fast_f("t: timer\r\n");
+		printf_fast_f("0: LineFi EN0,1,2 off\r\n");
+		printf_fast_f("1: LineFi EN0 = 1\r\n");
+		printf_fast_f("2:\r\n");
+		printf_fast_f("3:\r\n");
+		printf_fast_f("4:\r\n");
+		printf_fast_f("5:\r\n");
+		printf_fast_f("6:\r\n");
+		printf_fast_f("7:\r\n");
+		printf_fast_f("h: Addr--\r\n");
+		printf_fast_f("j: Cmd--\r\n");
+		printf_fast_f("k: Cmd++\r\n");
+		printf_fast_f("l: Addr++\r\n");
+		printf_fast_f("s: sending\r\n");
+}
+
 void act_by_one_key(uint8 au8RxUART, uint8 * apu8LineFiCmd, uint8 * apu8LineFiAddr)
 {
 	static UINT8 __xdata u8Data = 0;
@@ -701,6 +719,9 @@ void act_by_one_key(uint8 au8RxUART, uint8 * apu8LineFiCmd, uint8 * apu8LineFiAd
 			break;
 		case 'c' :
 			send_octet_to_linefi(0x13);
+			break;
+		case 'H' :
+			print_help();
 			break;
 	} //switch(au8RxUART)
 }
