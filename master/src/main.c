@@ -566,12 +566,12 @@ void printoutbuf(uint8 aucBufIdx, char * apcBuf)
 }
 #endif
 
-void act_by_keyinput(uint8 au8RxUART, uint8 * u8LineFiCmd, uint8 * u8LineFiAddr)
+void act_by_one_key(uint8 au8RxUART, uint8 * u8LineFiCmd, uint8 * u8LineFiAddr)
 {
 	static UINT8 __xdata u8Data = 0;
 	switch(au8RxUART) {
-		case 't' :
-			printf_fast_f("%d\n\r", gu16TimeCnt);
+		case 't' : // 1msec 카운터 확인, 5초에 40,000
+			printf_fast_f("%u\n\r", gu16TimeCnt);
 			gu16TimeCnt = 0;
 			break;
 		case '0' :
@@ -596,17 +596,17 @@ void act_by_keyinput(uint8 au8RxUART, uint8 * u8LineFiCmd, uint8 * u8LineFiAddr)
 			break;
 		case '4' :
 			gu8UART = 0;
+			TOGGLE(LINEFI_TX);
+			printf_fast_f("LINEFI_TX=%d\n\r", LINEFI_TX);
+			break;
+		case '5' :
+			gu8UART = 0;
 			if (LINEFI_EN0 == 0) {
 				LINEFI_TX = 1;
 			}
 			TOGGLE(LINEFI_EN0);
 			printf_fast_f("LINEFI_EN0=");
 			printf_fast_f("%d\n\r", LINEFI_EN0);
-			break;
-		case '5' :
-			gu8UART = 0;
-			TOGGLE(LINEFI_TX);
-			printf_fast_f("LINEFI_TX=%d\n\r", LINEFI_TX);
 			break;
 		case '6' :
 			TOGGLE(LINEFI_EN1);
@@ -692,7 +692,7 @@ void act_by_keyinput(uint8 au8RxUART, uint8 * u8LineFiCmd, uint8 * u8LineFiAddr)
 		case 'c' :
 			Send_Data_To_UART1(0x13);
 			break;
-	}
+	} //switch(au8RxUART)
 }
 
 /************************************************************************************************************
@@ -800,7 +800,7 @@ void main (void)
 				default :
 					switch(u8State_Uart0_input) {
 						case UART0_INPUT_MODE0 :
-							act_by_keyinput(u8RxUART, &u8LineFiCmd, &u8LineFiAddr);
+							act_by_one_key(u8RxUART, &u8LineFiCmd, &u8LineFiAddr);
 							break;
 						case UART0_INPUT_MODE1 :
 							gu16TimeCnt = 0;
@@ -903,7 +903,7 @@ void main (void)
 		else {
 			switch(u8State_Uart0_input) {
 				case UART0_INPUT_MODE0 :
-			//		act_by_keyinput(u8RxUART, &u8LineFiCmd, &u8LineFiAddr);
+			//		act_by_one_key(u8RxUART, &u8LineFiCmd, &u8LineFiAddr);
 					break;
 				case UART0_INPUT_MODE1 :
 //					printf_fast_f("%c",u8RxUART);
