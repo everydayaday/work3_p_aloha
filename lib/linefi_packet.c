@@ -74,20 +74,31 @@ uint8 chk_crc_linefi_packet_packet(linefi_packet_t * apstLineFiPkt)
 	return CRC_NOT_OK;
 }
 
+// just wrapper function
+UINT8 get_octet_from_linefi(UINT8 * apu8Tmp)
+{
+	return Receive_Data_From_UART1_nb(apu8Tmp);
+}
+
+void send_octet_to_linefi(UINT8 au8Data)
+{
+	return Send_Data_To_UART1(au8Data);
+}
+
 void send_linefi_packet(linefi_packet_t * apstLineFiPkt)
 {
 	uint8 u8CRC = calc_crc_linefi_packet_packet(apstLineFiPkt);
 
 	uint8 * pu8Buf = (uint8 *) apstLineFiPkt;
-	Send_Data_To_UART1(*pu8Buf++);
-	Send_Data_To_UART1(*pu8Buf++);
-	Send_Data_To_UART1(*pu8Buf++);
-	Send_Data_To_UART1(*pu8Buf++);
-	//Send_Data_To_UART1(*pu8Buf++); //CRC
-	Send_Data_To_UART1(u8CRC); //CRC
+	send_octet_to_linefi(*pu8Buf++);
+	send_octet_to_linefi(*pu8Buf++);
+	send_octet_to_linefi(*pu8Buf++);
+	send_octet_to_linefi(*pu8Buf++);
+	//send_octet_to_linefi(*pu8Buf++); //CRC
+	send_octet_to_linefi(u8CRC); //CRC
 	uint8 i;
 	for (i=0;i<apstLineFiPkt->u8Size;i++) {
-		Send_Data_To_UART1(*(apstLineFiPkt->pu8Data+i));
+		send_octet_to_linefi(*(apstLineFiPkt->pu8Data+i));
 	}
 }
 

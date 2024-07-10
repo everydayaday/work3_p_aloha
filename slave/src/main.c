@@ -731,7 +731,8 @@ void main (void)
 	//	uint8 u8MotorRotCmd;
 	uint8 u8MotorState = MS_STOP;
 
-	UINT8 u8RxIdx = 0;
+	UINT8 u8RxBufIdx = 0;
+	UINT8 u8RxLineFiLen = 0;
 #define MAX_RX_BUF_LEN 10
 	UINT8 pu8LineFiRx[MAX_RX_BUF_LEN];
 	UINT8 u8LineFiRxIdx = 0;
@@ -751,7 +752,7 @@ void main (void)
 	gu8UART = 0;
 	printf_fast_f("This is UART0\n\r");
 	gu8UART = 1;
-	printf_fast_f("This is UART1\n\r");
+	printf_fast_f("This is UART1\n\r"); //라인파이
 	UINT16 u8Count2 = 0;
 	UINT8 u8RxPktCnt = 0;
 	UINT8 u8PreambleCnt = 0;
@@ -825,7 +826,7 @@ void main (void)
 					gu16TimeCnt = 0;
 					break;
 			}
-		}
+		} // if (Receive_Data_From_UART0_nb(&u8RxUART))
 #endif
 		if (u8PrevSwitch != SWITCH) { // 스위치 스테이트가 변하면..
 			printf_fast_f("SWITCH:%d\n\r", SWITCH);
@@ -856,26 +857,27 @@ void main (void)
 #endif
 		switch(u8StateRxPkt) {
 			case STATE_RxPKT_INIT :
-				if (Receive_Data_From_UART1_nb(&u8RxUART)) {
+				if (get_octet_from_linefi(&u8RxUART)) {
 					gu16TimeCnt = 0;
-					u8RxIdx = 0;
-					pu8RxUART[u8RxIdx++] = u8RxUART;
+					u8RxBufIdx = 0;
+					pu8RxUART[u8RxBufIdx++] = u8RxUART;
 					u8StateRxPkt = STATE_RxPKT_START;
 				}
 			break;
 			case STATE_RxPKT_START :
-				if (Receive_Data_From_UART1_nb(&u8RxUART)) {
+				if (get_octet_from_linefi(&u8RxUART)) {
 					gu16TimeCnt = 0;
-					pu8RxUART[u8RxIdx++] = u8RxUART;
+					pu8RxUART[u8RxBufIdx++] = u8RxUART;
 				}
 				else if (gu16TimeCnt > 1000) { // 1msec넘으면
+					u8RxLineFiLen = u8RxBufIdx;
 					u8StateRxPkt = STATE_RxPKT_END;
 				}
 			break;
 
 			case STATE_RxPKT_END :
-			switch(u8RxIdx) {
-				case 1 :
+			switch(u8RxLineFiLen) {
+				case 1 : // 1 옥텟 수신, 초기 라인파이 임시 프로토콜
 					if (chk_my_addr(MY_ADDR, pu8RxUART[0])) {
 						//				rot_motor(u8RxUART);
 						printf_fast_f("Rx:%d\n\r", pu8RxUART[0]);
@@ -883,17 +885,17 @@ void main (void)
 					}
 					u8StateRxPkt = STATE_RxPKT_INIT;
 					break;
-				default :
-					if ( u8RxIdx < 8) {
+				default : // 가변 옥텟(8  이상) 길이의  라이인파이 패킷 수신
+					if ( u8RxLineFiLen < 8) { // 
 						UINT8 i;
-						printf_fast_f("Rx size:%d\n\r", u8RxIdx);
-						for (i=0; i<u8RxIdx;i++) {
+						printf_fast_f("Rx size:%d\n\r", u8RxLineFiLen);
+						for (i=0; i<u8RxLineFiLen;i++) {
 							printf_fast_f("0x%x ", pu8RxUART[i]);
 						}
 						printf_fast_f("\n\r");
 					}
 					else {
-						cp_buf2linefipacket(u8RxIdx, pu8RxUART, &stLineFiPkt);
+						cp_buf2linefipacket(u8RxLineFiLen, pu8RxUART, &stLineFiPkt);
 						process_all_packet(&stLineFiPkt);
 						//print_linefipacket(&stLineFiPkt);
 						if (gu8MyAddr == stLineFiPkt.u8Addr) {

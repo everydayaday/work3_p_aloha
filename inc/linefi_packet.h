@@ -40,6 +40,8 @@ typedef struct {
 } linefi_packet_t;
 
 uint8 size_linefi_packet(linefi_packet_t * apstLineFiPkt);
+UINT8 get_octet_from_linefi(UINT8 * apu8Tmp);
+void send_octet_to_linefi(UINT8 au8Data);
 void send_linefi_packet(linefi_packet_t * apstLineFiPkt);
 uint8 cp_buf2linefipacket(uint8 au8Size, uint8 * apu8RxBuf, linefi_packet_t * apstLineFiPkt);
 void print_linefipacket(linefi_packet_t * apstLineFiPkt);

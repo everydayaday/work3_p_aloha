@@ -658,17 +658,17 @@ void act_by_one_key(uint8 au8RxUART, uint8 * u8LineFiCmd, uint8 * u8LineFiAddr)
 		case 's' :
 			switch (*u8LineFiCmd ) {
 				case 0 : // address setting
-					Send_Data_To_UART1((((*u8LineFiAddr)<<4)&0xF0) | (*u8LineFiCmd)&0x0F);
+					send_octet_to_linefi((((*u8LineFiAddr)<<4)&0xF0) | (*u8LineFiCmd)&0x0F);
 					printf_fast_f("LineFi Sending: 0x%x:\n\r", ((*u8LineFiAddr)<<4) | *u8LineFiCmd);
 					printf_fast_f("address: 0x%d:\n\r", *u8LineFiAddr);
 					break;
 				case 1 : // uart speed setting
-					Send_Data_To_UART1((((*u8LineFiAddr)<<4)&0xF0) | (*u8LineFiCmd)&0x0F);
+					send_octet_to_linefi((((*u8LineFiAddr)<<4)&0xF0) | (*u8LineFiCmd)&0x0F);
 					printf_fast_f("LineFi Sending: 0x%x:\n\r", ((*u8LineFiAddr)<<4) | *u8LineFiCmd);
 					printf_fast_f("uart speed: %lu:\n\r", gpu32UartSpeed[*u8LineFiAddr]);
 					break;
 				default :
-					Send_Data_To_UART1((((*u8LineFiAddr)<<4)&0xF0) | (*u8LineFiCmd)&0x0F);
+					send_octet_to_linefi((((*u8LineFiAddr)<<4)&0xF0) | (*u8LineFiCmd)&0x0F);
 					printf_fast_f("LineFi Sending: 0x%x:\n\r", ((*u8LineFiAddr)<<4) | *u8LineFiCmd);
 					break;
 			}
@@ -679,7 +679,7 @@ void act_by_one_key(uint8 au8RxUART, uint8 * u8LineFiCmd, uint8 * u8LineFiAddr)
 			break;
 
 		case 'S' :
-			Send_Data_To_UART1(u8Data);
+			send_octet_to_linefi(u8Data);
 			printf_fast_f("LineFi Sending: %d(0x%x)\n\r", u8Data, u8Data);
 			break;
 		case '+' :
@@ -692,13 +692,13 @@ void act_by_one_key(uint8 au8RxUART, uint8 * u8LineFiCmd, uint8 * u8LineFiAddr)
 			break;
 
 		case 'a' :
-			Send_Data_To_UART1(0x11);
+			send_octet_to_linefi(0x11);
 			break;
 		case 'b' :
-			Send_Data_To_UART1(0x12);
+			send_octet_to_linefi(0x12);
 			break;
 		case 'c' :
-			Send_Data_To_UART1(0x13);
+			send_octet_to_linefi(0x13);
 			break;
 	} //switch(au8RxUART)
 }
@@ -720,7 +720,7 @@ void main (void)
 	UINT8 u8PwrOnFirstFlag = 1;
 	UINT8 u8SwNum;
 
-	uint8 u8State_Uart0_input = UART0_INPUT_MODE0;
+	uint8 u8StateUart0InputMode = UART0_INPUT_MODE0;
 
 	char __xdata pcBuf[100];
 #define MAX_DATA 10
@@ -776,7 +776,7 @@ void main (void)
 
 
 	InitialUART1_Timer3(gpu32UartSpeed[0]);
-	Send_Data_To_UART1(((LINEFI_DEFAULT_RATE<<4)&0xF0) | (1)&0x0F);
+	send_octet_to_linefi(((LINEFI_DEFAULT_RATE<<4)&0xF0) | (1)&0x0F);
 
 	for (u16Cnt = 0 ; u16Cnt < 30000; u16Cnt++) {
 		nop; nop; nop; nop; nop;
@@ -792,22 +792,22 @@ void main (void)
 	LINEFI_EN0 = 0;
 	LINEFI_EN1 = 1;
 	LINEFI_EN2 = 0;
-	printf("%s\r\n", gcUartInputMode[u8State_Uart0_input]);
+	printf("%s\r\n", gcUartInputMode[u8StateUart0InputMode]);
 
 	while(1) {
 #if 0 // uart0를 받아서 uart1으로 전달
 #else // CLI
-		if (Receive_Data_From_UART0_nb(&u8RxUART)) {
+		if (Receive_Data_From_UART0_nb(&u8RxUART)) { // 유아트 입력이 있을 때
 			switch(u8RxUART) {
 				case KEY_ESC :
-					u8State_Uart0_input++;
-					if (u8State_Uart0_input == MAX_STATE_UART0_INPUT) {
-						u8State_Uart0_input = 0;
+					u8StateUart0InputMode++;
+					if (u8StateUart0InputMode == MAX_STATE_UART0_INPUT) {
+						u8StateUart0InputMode = 0;
 					}
-					printf("%s\r\n", gcUartInputMode[u8State_Uart0_input]);
+					printf("%s\r\n", gcUartInputMode[u8StateUart0InputMode]);
 					break;
 				default :
-					switch(u8State_Uart0_input) {
+					switch(u8StateUart0InputMode) {
 						case UART0_INPUT_MODE0 :
 							act_by_one_key(u8RxUART, &u8LineFiCmd, &u8LineFiAddr);
 							break;
@@ -905,22 +905,18 @@ void main (void)
 							}
 						case UART0_INPUT_MODE4 :
 							break;
-					} //switch(u8State_Uart0_input)
+					} //switch(u8StateUart0InputMode)
 					break;
 			} //switch(u8RxUART)
 		} //if (Receive_Data_From_UART0_nb(&u8RxUART))
-		else {
-			switch(u8State_Uart0_input) {
+		else { // 유아트 입력이 없을 떄, 백그라운드로 실행
+			switch(u8StateUart0InputMode) {
 				case UART0_INPUT_MODE0 :
-			//		act_by_one_key(u8RxUART, &u8LineFiCmd, &u8LineFiAddr);
 					break;
 				case UART0_INPUT_MODE1 :
-//					printf_fast_f("%c",u8RxUART);
-					{
-						if (gu16TimeCnt > 10 && ucBufIdx != 0) {
-							printoutbuf(ucBufIdx, pcBuf);
-							ucBufIdx = 0;
-						}
+					if (gu16TimeCnt > 10 && ucBufIdx != 0) {
+						printoutbuf(ucBufIdx, pcBuf);
+						ucBufIdx = 0;
 					}
 					break;
 				case UART0_INPUT_MODE2 :
@@ -929,18 +925,14 @@ void main (void)
 					break;
 				case UART0_INPUT_MODE4 :
 					break;
-			} //switch(u8State_Uart0_input)
-
-
+			} //switch(u8StateUart0InputMode)
 		}
-
-#endif
+#endif // CLI
 //		if (Receive_Data_From_UART1_nb(&u8RxUART)) {
 
 //		} //if (Receive_Data_From_UART1_nb(&u8RxUART))
 
-
-#if 1
+#if 1 // 5개 스위치 입력 처리 부분
 		if (u8PwrOnFirstFlag) { // 전원 켜진 후, 한 번만 동작
 			switch (state_switches((SW_U<<0)| (SW_R<<1)| (SW_L<<2)| (SW_D<<3) | (SW_C<<4), &u8SwNum)) {
 				case SW_ON :
@@ -952,7 +944,7 @@ void main (void)
 							break;
 						case 2 :
 							InitialUART1_Timer3(gpu32UartSpeed[0]);
-							Send_Data_To_UART1(((LINEFI_DEFAULT_RATE<<4)&0xF0) | (1)&0x0F);
+							send_octet_to_linefi(((LINEFI_DEFAULT_RATE<<4)&0xF0) | (1)&0x0F);
 							printf_fast_f("uart speed: %lu:\n\r", gpu32UartSpeed[LINEFI_DEFAULT_RATE]);
 							InitialUART1_Timer3(gpu32UartSpeed[LINEFI_DEFAULT_RATE]);
 							u8PwrOnFirstFlag++;
@@ -974,7 +966,7 @@ void main (void)
 #if 0
 					switch(u8SwNum) {
 						case (1<<4) : // C
-							Send_Data_To_UART1(((u8LineFiSpeed<<4)&0xF0) | (1)&0x0F);
+							send_octet_to_linefi(((u8LineFiSpeed<<4)&0xF0) | (1)&0x0F);
 							printf_fast_f("SW_C\r\n");
 							u8PwrOnFirstFlag = 0;
 							InitialUART1_Timer3(gpu32UartSpeed[u8LineFiSpeed]);
@@ -1007,7 +999,7 @@ void main (void)
 #if 0
 					switch(u8SwNum) {
 						case (1<<4) : // center
-							Send_Data_To_UART1((u8LineFiAddr<<4) | u8LineFiCmd);
+							send_octet_to_linefi((u8LineFiAddr<<4) | u8LineFiCmd);
 							printf_fast_f("LineFi Sending: 0x%x:\n\r", (u8LineFiAddr<<4) | u8LineFiCmd);
 							break;
 						case (1<<3) : // down
@@ -1043,7 +1035,7 @@ void main (void)
 #if 0 // 모터동작 시나리오1 , 간단한
 					switch(u8SwNum) {
 						case (1<<4)|(1<<3) :
-							Send_Data_To_UART1(0x41);
+							send_octet_to_linefi(0x41);
 							u8EnCnt++;
 							if (u8EnCnt == 8) {
 								u8EnCnt = 0;
@@ -1068,19 +1060,19 @@ void main (void)
 							}
 							break;
 						case (1<<4) : // center SW3
-							Send_Data_To_UART1(0x40);
+							send_octet_to_linefi(0x40);
 							break;
 						case (1<<3) : // down SW1
-							Send_Data_To_UART1(0x41);
+							send_octet_to_linefi(0x41);
 							break;
 						case (1<<1) : // right SW2
-							Send_Data_To_UART1(0x42);
+							send_octet_to_linefi(0x42);
 							break;
 						case (1<<2) : //  left SW4
-							Send_Data_To_UART1(0x43);
+							send_octet_to_linefi(0x43);
 							break;
 						case (1<<0) : // up SW5
-							Send_Data_To_UART1(0x44);
+							send_octet_to_linefi(0x44);
 							break;
 					}
 #endif
@@ -1141,7 +1133,7 @@ void main (void)
 
 #if 0
 		if (Receive_Data_From_UART0_nb(&u8RxUART)) {
-			Send_Data_To_UART1(u8RxUART);
+			send_octet_to_linefi(u8RxUART);
 		}
 #endif
 
