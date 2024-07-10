@@ -70,7 +70,7 @@
 #define MAX_STATE_UART0_INPUT 4
 
 const char * __xdata  gcUartInputMode[MAX_STATE_UART0_INPUT] = {
-	"UART0_INPUT_MODE0",
+	"UART0_INPUT_MODE0:one key control",
 	"UART0_INPUT_MODE1:string input",
 	"UART0_INPUT_MODE2:mimic 5keys on board",
 	"UART0_INPUT_MODE3:data setting"
@@ -585,12 +585,12 @@ void act_by_one_key(uint8 au8RxUART, uint8 * u8LineFiCmd, uint8 * u8LineFiAddr)
 		case '0' :
 			gu8UART = 0;
 			LINEFI_EN0 = 0;
-			printf_fast_f("0\n\r");
+			printf_fast_f("LINEFI_EN0=0");
 			break;
 		case '1' :
 			gu8UART = 0;
 			LINEFI_EN0 = 1;
-			printf_fast_f("1\n\r");
+			printf_fast_f("LINEFI_EN0=1");
 			break;
 		case '2' :
 			gu8UART = 0;
@@ -792,6 +792,7 @@ void main (void)
 	LINEFI_EN0 = 0;
 	LINEFI_EN1 = 1;
 	LINEFI_EN2 = 0;
+	printf("%s\r\n", gcUartInputMode[u8State_Uart0_input]);
 
 	while(1) {
 #if 0 // uart0를 받아서 uart1으로 전달
