@@ -23,7 +23,15 @@
 #include "linefi_packet.h"
 
 #define KEY_ESC (27)
-#define TIMER0_VAL        (133*10) // 1msec 1kHz
+#define TIMER0_VAL        (133*80+605) // 1msec 1kHz 20초에 19,964
+//#define TIMER0_VAL        (133*80+610) // 1msec 1kHz 20초에 19,930
+//#define TIMER0_VAL        (133*80+612) // 1msec 1kHz 20초에  19,928
+//#define TIMER0_VAL        (133*80+625) // 1msec 1kHz 20초에  19,655
+//#define TIMER0_VAL        (133*80+600) // 1msec 1kHz 20초에 20,050 
+//#define TIMER0_VAL        (133*80+500) // 1msec 1kHz 20초에  20,150
+//#define TIMER0_VAL        (133*80-1000) // 1msec 1kHz 20초에 23,293 
+//#define TIMER0_VAL        (133*80) // 1msec 1kHz 20초에 21000
+//#define TIMER0_VAL        (133*10) // 1msec 1kHz ??
 //#define TIMER0_VAL        (133*1) // 100usec 10kHz
 //#define TIMER0_VAL        (13) // 10usec // 100kHz
 
