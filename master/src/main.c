@@ -585,12 +585,14 @@ void act_by_one_key(uint8 au8RxUART, uint8 * u8LineFiCmd, uint8 * u8LineFiAddr)
 		case '0' :
 			gu8UART = 0;
 			LINEFI_EN0 = 0;
-			printf_fast_f("LINEFI_EN0=0");
+			LINEFI_EN1 = 0;
+			LINEFI_EN2 = 0;
+			printf_fast_f("LINEFI_EN0=0\n\r");
 			break;
 		case '1' :
 			gu8UART = 0;
 			LINEFI_EN0 = 1;
-			printf_fast_f("LINEFI_EN0=1");
+			printf_fast_f("LINEFI_EN0=1\n\r");
 			break;
 		case '2' :
 			gu8UART = 0;
@@ -656,7 +658,7 @@ void act_by_one_key(uint8 au8RxUART, uint8 * u8LineFiCmd, uint8 * u8LineFiAddr)
 			}
 			break;
 		case 's' :
-			switch (*u8LineFiCmd ) {
+			switch (*u8LineFiCmd) {
 				case 0 : // address setting
 					send_octet_to_linefi((((*u8LineFiAddr)<<4)&0xF0) | (*u8LineFiCmd)&0x0F);
 					printf_fast_f("LineFi Sending: 0x%x:\n\r", ((*u8LineFiAddr)<<4) | *u8LineFiCmd);
@@ -816,7 +818,7 @@ void main (void)
 							pcBuf[ucBufIdx++] = u8RxUART;
 						//	printf_fast_f("%c",u8RxUART);
 							break;
-						case UART0_INPUT_MODE2 :
+						case UART0_INPUT_MODE2 : // mimic 5keys on board
 							switch(u8RxUART) {
 								case 'f' : // down SW1
 									u8LineFiAddr--;
@@ -854,8 +856,8 @@ void main (void)
 							switch(u8RxUART) {
 								case 'f' : // down SW1
 								case 'g' : // right SW2
-								case 'j' : // right SW2
-								case 'k' : // right SW2
+								case 'j' : // left SW4
+								case 'k' : // up SW5
 									stLineFiPkt.u8Addr = u8LineFiAddr;
 									stLineFiPkt.u8Type = u8LineFiCmd;
 									print_linefipacket(&stLineFiPkt);
@@ -928,9 +930,9 @@ void main (void)
 			} //switch(u8StateUart0InputMode)
 		}
 #endif // CLI
-//		if (Receive_Data_From_UART1_nb(&u8RxUART)) {
+//		if (get_octet_from_linefi(&u8RxUART)) {
 
-//		} //if (Receive_Data_From_UART1_nb(&u8RxUART))
+//		} //if (get_octet_from_linefi(&u8RxUART))
 
 #if 1 // 5개 스위치 입력 처리 부분
 		if (u8PwrOnFirstFlag) { // 전원 켜진 후, 한 번만 동작
