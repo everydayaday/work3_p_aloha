@@ -20,6 +20,7 @@
 #include "SFR_Macro.h"
 #include "Function_define.h"
 #include "uart.h"
+#include "dac_pt8211.h"
 #include "linefi_packet.h"
 
 #define KEY_ESC (27)
@@ -67,13 +68,14 @@
 #define LINEFI_EN2	P12
 #define LINEFI_TX	P16
 
-#define MAX_STATE_UART0_INPUT 4
+#define MAX_STATE_UART0_INPUT 5
 
 const char * __xdata  gcUartInputMode[MAX_STATE_UART0_INPUT] = {
 	"UART0_INPUT_MODE0:one key control",
 	"UART0_INPUT_MODE1:string input",
 	"UART0_INPUT_MODE2:mimic 5keys on board",
 	"UART0_INPUT_MODE3:data setting"
+	"UART0_INPUT_MODE4:dac setting"
 };
 
 enum {
@@ -81,7 +83,8 @@ enum {
 	UART0_INPUT_MODE1,
 	UART0_INPUT_MODE2,
 	UART0_INPUT_MODE3,
-	UART0_INPUT_MODE4
+	UART0_INPUT_MODE4,
+	UART0_INPUT_MODE5
 
 };
 UINT8 __xdata gpu8Data[20] = {
@@ -402,6 +405,8 @@ void gpio_setup()
 	P10_PushPull_Mode; // line fi enable
 	P11_PushPull_Mode; // line fi enable1
 	P12_PushPull_Mode; // line fi enable2
+	set_gpio_dac_pt8211();
+
 	LINEFI_EN0 = 0;
 	LINEFI_EN1 = 0;
 	LINEFI_EN2 = 0;
@@ -750,6 +755,9 @@ void main (void)
 	unsigned char __xdata pu8Data[MAX_DATA] = {0,0,0,0,0,0,0,0,0,0};
 	unsigned char __xdata u8DataIdx = 0;
 	uint8  __xdata ucBufIdx = 0;
+	
+	int  __xdata i16ValL = 0;
+	int  __xdata i16ValR = 0;
 
 	linefi_packet_t __xdata pstLineFiPkt[] = {
 		{1,2,1,10,5, gpu8Data},
@@ -927,7 +935,39 @@ void main (void)
 									}
 									break;
 							}
-						case UART0_INPUT_MODE4 :
+						case UART0_INPUT_MODE4 : // dac setting
+							switch(u8RxUART) {
+								case 's' : // setting
+									set_dac(i16ValL, i16ValR);
+									printf_fast_f("set dac as L=%d, R=%d%d\r\n", i16ValL, i16ValR);
+									break;
+								case 'H' : // left
+									i16ValR -= 900;
+								case 'h' : // left
+									i16ValR -= 100;
+									printf_fast_f("R:%d\r\n", i16ValR);
+									break;
+								case 'L' : // right 
+									i16ValR += 900;
+								case 'l' : // right 
+									i16ValR += 100;
+									printf_fast_f("R:%d\r\n", i16ValR);
+									break;
+
+								case 'J' : // DOWN 
+									i16ValL -= 900;
+								case 'j' : // down 
+									i16ValL -= 100;
+									printf_fast_f("L:%d\r\n", i16ValL);
+									break;
+								case 'K' : // UP 
+									i16ValL += 900;
+								case 'k' : // up 
+									i16ValL += 100;
+									printf_fast_f("L:%d\r\n", i16ValL);
+									break;
+
+							}
 							break;
 					} //switch(u8StateUart0InputMode)
 					break;
