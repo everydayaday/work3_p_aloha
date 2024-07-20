@@ -44,8 +44,13 @@ void set_dac_single(int aiValue)
 
 void set_dac(int aiL, int aiR)
 {
-	//digitalWrite(WS,1);
-	//set_dac_single(aiL);
+	/*
+	0x7FFF(+32767) ==> 3.740V
+	0x8000(-32767) ==> 1.243V
+	0 ==> 2.49V
+	*/
+	digitalWrite(WS,1);
+	set_dac_single(aiL);
 
 	digitalWrite(WS,0);
 	set_dac_single(aiR);

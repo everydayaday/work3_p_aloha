@@ -74,7 +74,7 @@ const char * __xdata  gcUartInputMode[MAX_STATE_UART0_INPUT] = {
 	"UART0_INPUT_MODE0:one key control",
 	"UART0_INPUT_MODE1:string input",
 	"UART0_INPUT_MODE2:mimic 5keys on board",
-	"UART0_INPUT_MODE3:data setting"
+	"UART0_INPUT_MODE3:data setting",
 	"UART0_INPUT_MODE4:dac setting"
 };
 
@@ -939,33 +939,68 @@ void main (void)
 							switch(u8RxUART) {
 								case 's' : // setting
 									set_dac(i16ValL, i16ValR);
-									printf_fast_f("set dac as L=%d, R=%d%d\r\n", i16ValL, i16ValR);
+									printf_fast_f("set dac as L=%d, R=%d\r\n", i16ValL, i16ValR);
 									break;
-								case 'H' : // left
+								case 'Y' :
 									i16ValR -= 900;
+								case 'y' :
+									i16ValR -= 90;
+								case 'H' :
+									i16ValR -= 9;
 								case 'h' : // left
-									i16ValR -= 100;
+									i16ValR -= 1;
 									printf_fast_f("R:%d\r\n", i16ValR);
 									break;
-								case 'L' : // right 
+								case 'O' :
 									i16ValR += 900;
+								case 'o' :
+									i16ValR += 90;
+								case 'L' :
+									i16ValR += 9;
 								case 'l' : // right 
-									i16ValR += 100;
+									i16ValR += 1;
 									printf_fast_f("R:%d\r\n", i16ValR);
 									break;
 
-								case 'J' : // DOWN 
+								case 'U' :
 									i16ValL -= 900;
+								case 'u' :
+									i16ValL -= 90;
+								case 'J' :
+									i16ValL -= 9;
 								case 'j' : // down 
-									i16ValL -= 100;
+									i16ValL -= 1;
 									printf_fast_f("L:%d\r\n", i16ValL);
 									break;
-								case 'K' : // UP 
+								case 'I' : // +1000
 									i16ValL += 900;
+								case 'i' : // +100
+									i16ValL += 90;
+								case 'K' : // +10
+									i16ValL += 9;
 								case 'k' : // up 
-									i16ValL += 100;
+									i16ValL += 1;
 									printf_fast_f("L:%d\r\n", i16ValL);
 									break;
+								case 'z' : // zero 
+									i16ValL = 0;
+									i16ValR = 0;
+									printf_fast_f("L:%d\r\n", i16ValL);
+									printf_fast_f("R:%d\r\n", i16ValR);
+									break;
+								case 'M' : // Max 
+									i16ValL = 0x7FFF;
+									i16ValR = 0x7FFF;
+									printf_fast_f("L:%d\r\n", i16ValL);
+									printf_fast_f("R:%d\r\n", i16ValR);
+									break;
+								case 'm' : // Min 
+									i16ValL = 0x8000;
+									i16ValR = 0x8000;
+									printf_fast_f("L:%d\r\n", i16ValL);
+									printf_fast_f("R:%d\r\n", i16ValR);
+									break;
+
 
 							}
 							break;
