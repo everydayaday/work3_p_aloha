@@ -68,14 +68,15 @@
 #define LINEFI_EN2	P12
 #define LINEFI_TX	P16
 
-#define MAX_STATE_UART0_INPUT 5
+#define MAX_STATE_UART0_INPUT 6
 
 const char * __xdata  gcUartInputMode[MAX_STATE_UART0_INPUT] = {
 	"UART0_INPUT_MODE0:one key control",
 	"UART0_INPUT_MODE1:string input",
 	"UART0_INPUT_MODE2:mimic 5keys on board",
 	"UART0_INPUT_MODE3:data setting",
-	"UART0_INPUT_MODE4:dac setting"
+	"UART0_INPUT_MODE4:dac setting",
+	"UART0_INPUT_MODE5:dac mV setting"
 };
 
 enum {
@@ -84,7 +85,8 @@ enum {
 	UART0_INPUT_MODE2,
 	UART0_INPUT_MODE3,
 	UART0_INPUT_MODE4,
-	UART0_INPUT_MODE5
+	UART0_INPUT_MODE5,
+	UART0_INPUT_MODE6
 
 };
 UINT8 __xdata gpu8Data[20] = {
@@ -999,6 +1001,75 @@ void main (void)
 									i16ValR = 0x8000;
 									printf_fast_f("L:%d\r\n", i16ValL);
 									printf_fast_f("R:%d\r\n", i16ValR);
+									break;
+
+
+							}
+							break;
+						case UART0_INPUT_MODE5 : // dac mV setting after opamp
+							switch(u8RxUART) {
+								case 's' : // setting
+									set_mV(i16ValL, i16ValR);
+									printf_fast_f("set dac as L=%dmV, R=%dmV\r\n", i16ValL, i16ValR);
+									break;
+								case 'Y' :
+									i16ValR -= 900;
+								case 'y' :
+									i16ValR -= 90;
+								case 'H' :
+									i16ValR -= 9;
+								case 'h' : // left
+									i16ValR -= 1;
+									printf_fast_f("R:%dmV\r\n", i16ValR);
+									break;
+								case 'O' :
+									i16ValR += 900;
+								case 'o' :
+									i16ValR += 90;
+								case 'L' :
+									i16ValR += 9;
+								case 'l' : // right 
+									i16ValR += 1;
+									printf_fast_f("R:%dmV\r\n", i16ValR);
+									break;
+
+								case 'U' :
+									i16ValL -= 900;
+								case 'u' :
+									i16ValL -= 90;
+								case 'J' :
+									i16ValL -= 9;
+								case 'j' : // down 
+									i16ValL -= 1;
+									printf_fast_f("L:%dmV\r\n", i16ValL);
+									break;
+								case 'I' : // +1000
+									i16ValL += 900;
+								case 'i' : // +100
+									i16ValL += 90;
+								case 'K' : // +10
+									i16ValL += 9;
+								case 'k' : // up 
+									i16ValL += 1;
+									printf_fast_f("L:%dmV\r\n", i16ValL);
+									break;
+								case 'z' : // zero 
+									i16ValL = 0;
+									i16ValR = 0;
+									printf_fast_f("L:%dmV\r\n", i16ValL);
+									printf_fast_f("R:%dmV\r\n", i16ValR);
+									break;
+								case 'M' : // Max 
+									i16ValL = 6000;
+									i16ValR = 6000;
+									printf_fast_f("L:%d\r\n", i16ValL);
+									printf_fast_f("R:%d\r\n", i16ValR);
+									break;
+								case 'm' : // Min 
+									i16ValL = -6000;
+									i16ValR = -6000;
+									printf_fast_f("L:%dmV\r\n", i16ValL);
+									printf_fast_f("R:%dmV\r\n", i16ValR);
 									break;
 
 

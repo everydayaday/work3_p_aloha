@@ -14,4 +14,5 @@
 void set_gpio_dac_pt8211();
 void set_dac_single(int aiValue);
 void set_dac(int aiL, int aiR);
+void set_mV(int aiLmV, int aiRmV);
 #endif
