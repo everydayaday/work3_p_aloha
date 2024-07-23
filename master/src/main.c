@@ -67,13 +67,14 @@
 #define LINEFI_EN2	P12
 #define LINEFI_TX	P16
 
-#define MAX_STATE_UART0_INPUT 4
+#define MAX_STATE_UART0_INPUT 5
 
 const char * __xdata  gcUartInputMode[MAX_STATE_UART0_INPUT] = {
 	"UART0_INPUT_MODE0:one key control",
 	"UART0_INPUT_MODE1:string input",
 	"UART0_INPUT_MODE2:mimic 5keys on board",
-	"UART0_INPUT_MODE3:data setting"
+	"UART0_INPUT_MODE3:data setting",
+	"UART0_INPUT_MODE4:periodic function",
 };
 
 enum {
@@ -81,7 +82,8 @@ enum {
 	UART0_INPUT_MODE1,
 	UART0_INPUT_MODE2,
 	UART0_INPUT_MODE3,
-	UART0_INPUT_MODE4
+	UART0_INPUT_MODE4,
+	UART0_INPUT_MODE5
 
 };
 UINT8 __xdata gpu8Data[20] = {
@@ -103,6 +105,7 @@ UINT8 __xdata gpu8Data2[20] = {
 #define LINEFI_DEFAULT_RATE	3
 
 uint16 __xdata gu16TimeCnt;
+uint16 __xdata gu16TimeCntMilliSec;
 UINT32 __xdata gpu32UartSpeed[] = {
 	2400, // 0
 	28800, // 1
@@ -235,6 +238,7 @@ void Timer0_ISR (void) interrupt(1)  //interrupt address is 0x000B
 	TH0 = TH0_INIT;
 	TL0 = TL0_INIT;
 	gu16TimeCnt++;
+	gu16TimeCntMilliSec++;
 #if 0
 	if (P06) {
 		P06 = 0;
@@ -726,6 +730,27 @@ void act_by_one_key(uint8 au8RxUART, uint8 * apu8LineFiCmd, uint8 * apu8LineFiAd
 	} //switch(au8RxUART)
 }
 
+enum {
+	STATE_PS_INIT,
+	STATE_PS_SENDING,
+	STATE_PS_END,
+	CMD_PS_START,
+	CMD_PS_END
+};
+
+#if 1
+void periodic_func(char * apcStr)
+{
+	static UINT8 su8Cnt = 0;
+	/*
+	주기적으로 패킷 보내는 코드
+	*/
+	printf_fast_f("%d\r\n", su8Cnt++);
+	printf_fast_f("%s\r\n", apcStr);
+}
+#endif
+
+
 /************************************************************************************************************
  *    Main function 
  ************************************************************************************************************/
@@ -742,6 +767,9 @@ void main (void)
 	UINT8 u8LineFiCmd = 1;
 	UINT8 u8PwrOnFirstFlag = 1;
 	UINT8 u8SwNum;
+
+	UINT8 u8StatePeriodicSend = STATE_PS_INIT;
+	UINT8 u8PSCmd = STATE_PS_INIT;
 
 	uint8 u8StateUart0InputMode = UART0_INPUT_MODE0;
 
@@ -927,7 +955,20 @@ void main (void)
 									}
 									break;
 							}
-						case UART0_INPUT_MODE4 :
+						case UART0_INPUT_MODE4 : // 주기적으로 하향 패킷 생성 스테이트머신 제어용 CLI
+							switch(u8RxUART) {
+								case 's' : // 주기적으로 패킷 생성 시작 
+									printf_fast_f("START periodic packet generating..\r\n");
+									u8PSCmd = CMD_PS_START;
+									break;
+								case 'e' : // 종료
+									printf_fast_f("STOP  periodic packet generating..\r\n");
+									u8PSCmd = CMD_PS_END;
+									break;
+							}
+
+
+
 							break;
 					} //switch(u8StateUart0InputMode)
 					break;
@@ -1175,5 +1216,27 @@ void main (void)
 			printf_fast_f("P17 = 0\n\r");
 		}
 #endif
+		switch(u8StatePeriodicSend) {
+			case STATE_PS_INIT :
+				if (u8PSCmd == CMD_PS_START) {
+					u8StatePeriodicSend = STATE_PS_SENDING;
+					gu16TimeCntMilliSec = 0;
+					periodic_func("starting...");
+				}
+				break;
+			case STATE_PS_SENDING :
+				if (gu16TimeCntMilliSec > 1000) {
+					gu16TimeCntMilliSec = 0;
+					periodic_func("periodic...");
+				}
+				if (u8PSCmd == CMD_PS_END) {
+					u8StatePeriodicSend = STATE_PS_INIT;
+					periodic_func("stopping...");
+				}
+				break;
+		}
+
+
+
 	} //while(1)
 }
