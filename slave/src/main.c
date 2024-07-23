@@ -441,7 +441,7 @@ void gpio_setup()
 	P04_PushPull_Mode;
 	P03_PushPull_Mode;
 
-	UART_TX = 0;
+	UART_TX = 1;
 	LED_B = 1;
 	LED_G = 1;
 	LED_R = 1;
@@ -759,7 +759,9 @@ void main (void)
 
 	gpio_setup();
 	uart_setup();
-	InitialUART1_Timer3(57600);
+	//InitialUART1_Timer3(57600);
+	//InitialUART1_Timer3(115200);
+	InitialUART1_Timer3(230400);
 
 	MODIFY_HIRC_166();
 
@@ -853,6 +855,7 @@ void main (void)
 			if (SWITCH) { //눌렸을 때
 			}
 			else { //떨어질 때
+#if 1
 				static uint8 su8Cnt = 0;
 				su8Cnt++;
 				LED_R = su8Cnt&1;
@@ -862,13 +865,18 @@ void main (void)
 //				MOTOR_EN = su8Cnt&1;
 				MOTOR_CW = (su8Cnt>>1)&1;
 				MOTOR_CCW = (su8Cnt>>2)&1;
+#endif
 
 			}
 			u8PrevSwitch = SWITCH;
 		} //if (u8PrevSwitch != SWITCH)
 
 		if (SWITCH) {
-			//	TOGGLE(UART_TX);
+//			TOGGLE(UART_TX);
+			preamble();
+			preamble();
+			putchar_manchester('0');
+			putchar_manchester('0');
 		}
 		if (u8UartRx != UART_RX) {
 //			printf_fast_f("UART_RX:%d\n\r", UART_RX);
