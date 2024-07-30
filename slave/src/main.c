@@ -165,9 +165,6 @@ void preamble()
 {
 	gu8UART = 1;
 	putchar(0xF0);
-	putchar(0xF0);
-	putchar(0xF0);
-	putchar(0xF0);
 	gu8UART = 1;
 	return;
 }
@@ -958,8 +955,7 @@ void main (void)
 #endif
 		switch(u8StateRxPkt) {
 			case STATE_RxPKT_INIT :
-//				if (get_octet_from_linefi(&u8RxUART)) {
-				if (Receive_Data_From_UART1_nb(&u8RxUART)) {
+				if (get_octet_from_linefi(&u8RxUART)) {
 					gu16TimeCnt = 0;
 					u8RxBufIdx = 0;
 					pu8RxUART[u8RxBufIdx++] = u8RxUART;
@@ -967,8 +963,7 @@ void main (void)
 				}
 			break;
 			case STATE_RxPKT_START :
-				//if (get_octet_from_linefi(&u8RxUART)) {
-				if (Receive_Data_From_UART1_nb(&u8RxUART)) {
+				if (get_octet_from_linefi(&u8RxUART)) {
 					gpu16RxTime[u8RxBufIdx-1] = gu16TimeCnt;
 					gu16TimeCnt = 0;
 					pu8RxUART[u8RxBufIdx++] = u8RxUART;
