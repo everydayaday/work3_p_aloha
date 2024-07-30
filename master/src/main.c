@@ -67,7 +67,16 @@
 #define LINEFI_EN2	P12
 #define LINEFI_TX	P16
 
-#define MAX_STATE_UART0_INPUT 5
+typedef enum {
+	UART0_INPUT_MODE0,
+	UART0_INPUT_MODE1,
+	UART0_INPUT_MODE2,
+	UART0_INPUT_MODE3,
+	UART0_INPUT_MODE4,
+	UART0_INPUT_MODE5,
+	MAX_STATE_UART0_INPUT
+
+} uart0_input_mode_t;
 
 const char * __xdata  gcUartInputMode[MAX_STATE_UART0_INPUT] = {
 	"UART0_INPUT_MODE0:one key control",
@@ -75,17 +84,10 @@ const char * __xdata  gcUartInputMode[MAX_STATE_UART0_INPUT] = {
 	"UART0_INPUT_MODE2:mimic 5keys on board",
 	"UART0_INPUT_MODE3:data setting",
 	"UART0_INPUT_MODE4:periodic function",
+	"UART0_INPUT_MODE5:uplink test"
 };
 
-enum {
-	UART0_INPUT_MODE0,
-	UART0_INPUT_MODE1,
-	UART0_INPUT_MODE2,
-	UART0_INPUT_MODE3,
-	UART0_INPUT_MODE4,
-	UART0_INPUT_MODE5
 
-};
 UINT8 __xdata gpu8Data[20] = {
 	1,1,1,1,
 	2,2,2,2,
@@ -102,7 +104,8 @@ UINT8 __xdata gpu8Data2[20] = {
 	5,5,5,5,
 };
 
-#define LINEFI_DEFAULT_RATE	3
+#define LINEFI_DEFAULT_RATE	57600
+#define LINEFI_DEFAULT_RATE_IDX	3
 
 uint16 __xdata gu16TimeCnt;
 uint16 __xdata gu16TimeCntMilliSec;
@@ -122,6 +125,8 @@ UINT32 __xdata gpu32UartSpeed[] = {
 	900000,  // 12
 	921600  // 13
 };
+
+UINT32 __xdata gu32LineFiUpSpeed = LINEFI_DEFAULT_RATE;
 
 UINT8 gu8UART = 0;
 
@@ -750,6 +755,14 @@ void periodic_func(char * apcStr)
 }
 #endif
 
+void make_linefi_payload(UINT32 au32LineFiUpSpeed, UINT8 au8ULTMode, UINT8 au8ULTData, UINT8 *apu8Data)
+{
+	apu8Data[0] = (au32LineFiUpSpeed>>16);
+	apu8Data[1] = (au32LineFiUpSpeed>>8);
+	apu8Data[2] = (au32LineFiUpSpeed>>0);
+	apu8Data[3] = au8ULTMode;
+	apu8Data[4] = au8ULTData;
+}
 
 /************************************************************************************************************
  *    Main function 
@@ -771,7 +784,7 @@ void main (void)
 	UINT8 u8StatePeriodicSend = STATE_PS_INIT;
 	UINT8 u8PSCmd = STATE_PS_INIT;
 
-	uint8 u8StateUart0InputMode = UART0_INPUT_MODE0;
+	uart0_input_mode_t __xdata u8StateUart0InputMode = UART0_INPUT_MODE0;
 
 	char __xdata pcBuf[100];
 #define MAX_DATA 10
@@ -828,13 +841,13 @@ void main (void)
 
 
 	InitialUART1_Timer3(gpu32UartSpeed[0]);
-	send_octet_to_linefi(((LINEFI_DEFAULT_RATE<<4)&0xF0) | (1)&0x0F);
+	send_octet_to_linefi(((LINEFI_DEFAULT_RATE_IDX<<4)&0xF0) | (1)&0x0F);
 
 	for (u16Cnt = 0 ; u16Cnt < 30000; u16Cnt++) {
 		nop; nop; nop; nop; nop;
 	}
 
-	InitialUART1_Timer3(gpu32UartSpeed[LINEFI_DEFAULT_RATE]);
+	InitialUART1_Timer3(gpu32UartSpeed[LINEFI_DEFAULT_RATE_IDX]);
 
 	for (u16Cnt = 0 ; u16Cnt < 30000; u16Cnt++) {
 		nop; nop; nop; nop; nop;
@@ -967,8 +980,58 @@ void main (void)
 									break;
 							}
 
+						case UART0_INPUT_MODE5 : // 상향 시험용
+							switch(u8RxUART) {
+								case '0' : // 
+									stLineFiPkt.u8Type = Type_UpLinkTest;
+									make_linefi_payload(gu32LineFiUpSpeed, ULTMODE_INIT, 0, pu8Data);
+									stLineFiPkt.pu8Data = pu8Data;
 
+									send_linefi_packet(&stLineFiPkt);
+									break;
 
+								case '1' : // 
+									stLineFiPkt.u8Type = Type_UpLinkTest;
+									make_linefi_payload(gu32LineFiUpSpeed, ULTMODE_PREAMBLE, 0, pu8Data);
+									stLineFiPkt.pu8Data = pu8Data;
+
+									send_linefi_packet(&stLineFiPkt);
+									break;
+
+								case '2' : // 
+									stLineFiPkt.u8Type = Type_UpLinkTest;
+									make_linefi_payload(gu32LineFiUpSpeed, ULTMODE_DATA, 0, pu8Data);
+									stLineFiPkt.pu8Data = pu8Data;
+
+									send_linefi_packet(&stLineFiPkt);
+									break;
+
+								case '3' : // 
+									stLineFiPkt.u8Type = Type_UpLinkTest;
+									make_linefi_payload(gu32LineFiUpSpeed, ULTMODE_DATA, 0xff, pu8Data);
+									stLineFiPkt.pu8Data = pu8Data;
+
+									send_linefi_packet(&stLineFiPkt);
+									break;
+
+								case 'k' : // speed up
+									if (u8LineFiSpeed  != 13) {
+										u8LineFiSpeed++;
+									}
+
+									u8LineFiSpeed++;
+									printf_fast_f("uart speed: %lu:\n\r", gpu32UartSpeed[u8LineFiSpeed]);
+									gu32LineFiUpSpeed = gpu32UartSpeed[u8LineFiSpeed];
+									break;
+								case 'j' : // speed down
+									if (u8LineFiSpeed  != 0) {
+										u8LineFiSpeed--;
+									}
+
+									printf_fast_f("uart speed: %lu:\n\r", gpu32UartSpeed[u8LineFiSpeed]);
+									gu32LineFiUpSpeed = gpu32UartSpeed[u8LineFiSpeed];
+									break;
+							}
 							break;
 					} //switch(u8StateUart0InputMode)
 					break;
@@ -1009,9 +1072,9 @@ void main (void)
 							break;
 						case 2 :
 							InitialUART1_Timer3(gpu32UartSpeed[0]);
-							send_octet_to_linefi(((LINEFI_DEFAULT_RATE<<4)&0xF0) | (1)&0x0F);
-							printf_fast_f("uart speed: %lu:\n\r", gpu32UartSpeed[LINEFI_DEFAULT_RATE]);
-							InitialUART1_Timer3(gpu32UartSpeed[LINEFI_DEFAULT_RATE]);
+							send_octet_to_linefi(((LINEFI_DEFAULT_RATE_IDX<<4)&0xF0) | (1)&0x0F);
+							printf_fast_f("uart speed: %lu:\n\r", gpu32UartSpeed[LINEFI_DEFAULT_RATE_IDX]);
+							InitialUART1_Timer3(gpu32UartSpeed[LINEFI_DEFAULT_RATE_IDX]);
 							u8PwrOnFirstFlag++;
 							u8LineFiCmd = 2;
 							u8LineFiAddr = 1;

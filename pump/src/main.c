@@ -73,7 +73,7 @@
 #define ROT_SENSE_OPEN 		(1) //빛이 투과할 때
 #define ROT_SENSE_CLOSE 	(0) //빛이 막혔을 때
 
-#define LINEFI_RATE	8
+#define LINEFI_RATE_IDX	8
 #define MAX_RX_LEN			10
 #define LINEFI_RX_TIMEOUT	10 // 10sec
 

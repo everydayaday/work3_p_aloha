@@ -81,7 +81,7 @@ __code __at (BASE_ADDRESS) char gpcEEPROM[128] = "";
 #define LED_OFF 1
 #define LED_ON 0
 
-#define LINEFI_RATE	3
+#define LINEFI_RATE_IDX	3
 
 uint8 gu8MyAddr;
 
