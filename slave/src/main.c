@@ -877,6 +877,7 @@ void main (void)
 			if (SWITCH) { //눌렸을 때
 			}
 			else { //떨어질 때
+				InitialUART1_Timer3(230400);
 #if 1
 				static uint8 su8Cnt = 0;
 				su8Cnt++;
