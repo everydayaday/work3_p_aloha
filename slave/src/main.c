@@ -108,6 +108,7 @@ UINT32 __xdata gpu32UartSpeed[] = {
 	921600  // 13
 };
 
+UINT16 __xdata gpu16RxTime[20];
 UINT8 gu8UART = 0;
 UINT16 gu16TimeCnt = 0;
 UINT32 gu32TimeCnt = 0;
@@ -890,6 +891,14 @@ void main (void)
 					printf_fast_f("count:%lu\r\n", gu32TimeCnt);
 					gu32TimeCnt = 0;
 					break;
+				case 'r' :
+					if (get_octet_from_linefi(&u8RxUART)) {
+					printf_fast_f("rx data : %x\r\n", u8RxUART);
+					}
+					else {
+					printf_fast_f("no rx\r\n");
+					}
+					break;
 			}
 		} // if (Receive_Data_From_UART0_nb(&u8RxUART))
 #endif
@@ -949,7 +958,8 @@ void main (void)
 #endif
 		switch(u8StateRxPkt) {
 			case STATE_RxPKT_INIT :
-				if (get_octet_from_linefi(&u8RxUART)) {
+//				if (get_octet_from_linefi(&u8RxUART)) {
+				if (Receive_Data_From_UART1_nb(&u8RxUART)) {
 					gu16TimeCnt = 0;
 					u8RxBufIdx = 0;
 					pu8RxUART[u8RxBufIdx++] = u8RxUART;
@@ -957,7 +967,9 @@ void main (void)
 				}
 			break;
 			case STATE_RxPKT_START :
-				if (get_octet_from_linefi(&u8RxUART)) {
+				//if (get_octet_from_linefi(&u8RxUART)) {
+				if (Receive_Data_From_UART1_nb(&u8RxUART)) {
+					gpu16RxTime[u8RxBufIdx-1] = gu16TimeCnt;
 					gu16TimeCnt = 0;
 					pu8RxUART[u8RxBufIdx++] = u8RxUART;
 				}
@@ -985,12 +997,20 @@ void main (void)
 							printf_fast_f("0x%x ", pu8RxUART[i]);
 						}
 						printf_fast_f("\n\r");
+						for (i=0; i<u8RxLFPLen;i++) {
+							printf_fast_f("%d  ", gpu16RxTime[i]);
+						}
+						printf_fast_f("\n\r");
 					}
 					else {
 						UINT8 i;
 						printf_fast_f("2:Rx size:%d\n\r", u8RxLFPLen);
 						for (i=0; i<u8RxLFPLen;i++) {
 							printf_fast_f("0x%x ", pu8RxUART[i]);
+						}
+						printf_fast_f("\n\r");
+						for (i=0; i<u8RxLFPLen;i++) {
+							printf_fast_f("%d  ", gpu16RxTime[i]);
 						}
 						printf_fast_f("\n\r");
 
