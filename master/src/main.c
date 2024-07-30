@@ -758,6 +758,10 @@ void make_linefi_payload(UINT32 au32LineFiUpSpeed, UINT8 au8ULTMode, UINT8 au8UL
 	apu8Data[0] = (au32LineFiUpSpeed>>16);
 	apu8Data[1] = (au32LineFiUpSpeed>>8);
 	apu8Data[2] = (au32LineFiUpSpeed>>0);
+	printf_fast_f("%lu(%x, %x, %x)\r\n", au32LineFiUpSpeed,
+			apu8Data[0],
+			apu8Data[1],
+			apu8Data[2]);
 	apu8Data[3] = au8ULTMode;
 	apu8Data[4] = au8ULTData;
 }
@@ -774,13 +778,13 @@ void main (void)
 	UINT8 __xdata u8OutputState = STATE_SELF;
 	UINT8 __xdata u8StateRxCSC = STATE_RxCSC_STOP;
 	UINT8 __xdata u8LineFiAddr = 1;
-	UINT8 u8LineFiSpeed = 1;
-	UINT8 u8LineFiCmd = 1;
-	UINT8 u8PwrOnFirstFlag = 1;
-	UINT8 u8SwNum;
+	UINT8 __xdata u8LineFiSpeed = 1;
+	UINT8 __xdata u8LineFiCmd = 1;
+	UINT8 __xdata u8PwrOnFirstFlag = 1;
+	UINT8 __xdata u8SwNum;
 
-	UINT8 u8StatePeriodicSend = STATE_PS_INIT;
-	UINT8 u8PSCmd = STATE_PS_INIT;
+	UINT8 __xdata u8StatePeriodicSend = STATE_PS_INIT;
+	UINT8 __xdata u8PSCmd = STATE_PS_INIT;
 
 	uart0_input_mode_t __xdata u8StateUart0InputMode = UART0_INPUT_MODE0;
 
@@ -833,13 +837,12 @@ void main (void)
 		nop; nop; nop; nop; nop;
 	}
 	LINEFI_TX = 1;
-	LINEFI_EN0 = 0;
 	gu8UART = 0;
 
 
 
-	InitialUART1_Timer3(gpu32UartSpeed[0]);
-	send_octet_to_linefi(((LINEFI_DEFAULT_RATE_IDX<<4)&0xF0) | (1)&0x0F);
+//	InitialUART1_Timer3(gpu32UartSpeed[0]);
+//	send_octet_to_linefi(((LINEFI_DEFAULT_RATE_IDX<<4)&0xF0) | (1)&0x0F);
 
 	for (u16Cnt = 0 ; u16Cnt < 30000; u16Cnt++) {
 		nop; nop; nop; nop; nop;
@@ -852,10 +855,10 @@ void main (void)
 	}
 	LINEFI_TX = 1;
 
+	printf("%s\r\n", gcUartInputMode[u8StateUart0InputMode]);
 	LINEFI_EN0 = 0;
 	LINEFI_EN1 = 1;
 	LINEFI_EN2 = 0;
-	printf("%s\r\n", gcUartInputMode[u8StateUart0InputMode]);
 
 	while(1) {
 #if 0 // uart0를 받아서 uart1으로 전달
@@ -983,48 +986,53 @@ void main (void)
 								case '0' : // 
 									stLineFiPkt.u8Type = Type_UpLinkTest;
 									make_linefi_payload(gpu32UartSpeed[u8LineFiSpeed], ULTMODE_INIT, 0, pu8Data);
+									stLineFiPkt.u8Size = 10;
 									stLineFiPkt.pu8Data = pu8Data;
 
 									send_linefi_packet(&stLineFiPkt);
+									print_linefipacket(&stLineFiPkt);
 									break;
 
 								case '1' : // 
 									stLineFiPkt.u8Type = Type_UpLinkTest;
 									make_linefi_payload(gpu32UartSpeed[u8LineFiSpeed], ULTMODE_PREAMBLE, 0, pu8Data);
+									stLineFiPkt.u8Size = 10;
 									stLineFiPkt.pu8Data = pu8Data;
 
 									send_linefi_packet(&stLineFiPkt);
+									print_linefipacket(&stLineFiPkt);
 									break;
 
 								case '2' : // 
 									stLineFiPkt.u8Type = Type_UpLinkTest;
 									make_linefi_payload(gpu32UartSpeed[u8LineFiSpeed], ULTMODE_DATA, 0, pu8Data);
+									stLineFiPkt.u8Size = 10;
 									stLineFiPkt.pu8Data = pu8Data;
 
 									send_linefi_packet(&stLineFiPkt);
+									print_linefipacket(&stLineFiPkt);
 									break;
 
 								case '3' : // 
 									stLineFiPkt.u8Type = Type_UpLinkTest;
 									make_linefi_payload(gpu32UartSpeed[u8LineFiSpeed], ULTMODE_DATA, 0xff, pu8Data);
+									stLineFiPkt.u8Size = 10;
 									stLineFiPkt.pu8Data = pu8Data;
 
 									send_linefi_packet(&stLineFiPkt);
+									print_linefipacket(&stLineFiPkt);
 									break;
 
 								case 'k' : // speed up
-									if (u8LineFiSpeed  != 13) {
+									if (u8LineFiSpeed  < 13) {
 										u8LineFiSpeed++;
 									}
-
-									u8LineFiSpeed++;
 									printf_fast_f("uart speed: %lu:\n\r", gpu32UartSpeed[u8LineFiSpeed]);
 									break;
 								case 'j' : // speed down
 									if (u8LineFiSpeed  != 0) {
 										u8LineFiSpeed--;
 									}
-
 									printf_fast_f("uart speed: %lu:\n\r", gpu32UartSpeed[u8LineFiSpeed]);
 									break;
 							}
@@ -1063,7 +1071,9 @@ void main (void)
 					switch(u8PwrOnFirstFlag) {
 						case 1 :
 							LINEFI_TX = 1;
-							LINEFI_EN0 = 1;
+							LINEFI_EN0 = 0;
+							LINEFI_EN1 = 1;
+							LINEFI_EN2 = 0;
 							u8PwrOnFirstFlag++;
 							break;
 						case 2 :

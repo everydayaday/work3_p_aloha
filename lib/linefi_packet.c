@@ -87,7 +87,7 @@ void send_octet_to_linefi(UINT8 au8Data)
 
 void send_linefi_packet(linefi_packet_t * apstLineFiPkt)
 {
-	uint8 u8CRC = calc_crc_linefi_packet_packet(apstLineFiPkt);
+	uint8 __xdata u8CRC = calc_crc_linefi_packet_packet(apstLineFiPkt);
 
 	uint8 * pu8Buf = (uint8 *) apstLineFiPkt;
 	send_octet_to_linefi(*pu8Buf++);
@@ -96,10 +96,22 @@ void send_linefi_packet(linefi_packet_t * apstLineFiPkt)
 	send_octet_to_linefi(*pu8Buf++);
 	//send_octet_to_linefi(*pu8Buf++); //CRC
 	send_octet_to_linefi(u8CRC); //CRC
-	uint8 i;
-	for (i=0;i<apstLineFiPkt->u8Size;i++) {
+	uint8 __xdata i;
+	for (i=0;i<apstLineFiPkt->u8Size-5;i++) {
 		send_octet_to_linefi(*(apstLineFiPkt->pu8Data+i));
 	}
+#if 0
+	pu8Buf = (uint8 *) apstLineFiPkt;
+	printf_fast_f("%x,", *pu8Buf++);
+	printf_fast_f("%x,", *pu8Buf++);
+	printf_fast_f("%x,", *pu8Buf++);
+	printf_fast_f("%x,", *pu8Buf++);
+	printf_fast_f("%x,", u8CRC);
+	for (i=0;i<apstLineFiPkt->u8Size-5;i++) {
+		printf_fast_f("%x,",*(apstLineFiPkt->pu8Data+i));
+	}
+	printf_fast_f("\r\n");
+#endif
 }
 
 uint8 cp_buf2linefipacket(uint8 au8Size, uint8 * apu8RxBuf, linefi_packet_t * apstLineFiPkt)
@@ -123,7 +135,7 @@ uint8 cp_buf2linefipacket(uint8 au8Size, uint8 * apu8RxBuf, linefi_packet_t * ap
 	uint8 i;
 
 	//라인파이패킷 페이로드 복사
-	for (i=0;i<apstLineFiPkt->u8Size;i++) {
+	for (i=0;i<apstLineFiPkt->u8Size-5;i++) {
 		apstLineFiPkt->pu8Data[i] = *apu8RxBuf++;
 	}
 
@@ -145,7 +157,7 @@ void print_linefipacket(linefi_packet_t * apstLineFiPkt)
 	printf_fast_f("CRC comp : %d %d\r\n", apstLineFiPkt->u8CRC, calc_crc_linefi_packet_packet(apstLineFiPkt));
 	printf_fast_f("DATA: ");
 	uint8 i;
-	for (i=0;i<apstLineFiPkt->u8Size;i++) {
+	for (i=0;i<apstLineFiPkt->u8Size-5;i++) {
 		printf_fast_f("0x%x ", apstLineFiPkt->pu8Data[i]);
 	}
 	printf_fast_f("\r\n");
