@@ -735,16 +735,15 @@ void process_all_packet(linefi_packet_t * apstLineFiPkt)
 //					| (apstLineFiPkt->pu8Data[2]));
 
 			gu8UART = 0;
-#if 0
-			printf_fast_f("uart speed: %lu(%x,%x,%x):\n\r", 
-					(apstLineFiPkt->pu8Data[0] << 16) 
-					| (apstLineFiPkt->pu8Data[1] << 8) 
-					| (apstLineFiPkt->pu8Data[2]),
-					apstLineFiPkt->pu8Data[0] ,
-					apstLineFiPkt->pu8Data[1] ,
-					apstLineFiPkt->pu8Data[2]);
+			UINT32  u32Tmp = apstLineFiPkt->pu8Data[0];
+			u32Tmp <<= 8;
+			u32Tmp |= apstLineFiPkt->pu8Data[1];
+			u32Tmp <<= 8;
+			u32Tmp |= apstLineFiPkt->pu8Data[2];
+#if 1
+			printf_fast_f("uart speed: %lu", u32Tmp);
 #endif
-			printf_fast_f("uart speed: (%x,%x,%x)\n\r", 
+			printf_fast_f("(%x,%x,%x)\n\r", 
 					apstLineFiPkt->pu8Data[0] ,
 					apstLineFiPkt->pu8Data[1] ,
 					apstLineFiPkt->pu8Data[2]);
