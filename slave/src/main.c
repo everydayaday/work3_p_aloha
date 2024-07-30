@@ -88,6 +88,9 @@ uint8 gu8MyAddr;
 UINT8 __xdata gpu8Data[20];
 UINT8 __xdata gu8MotorState = 0;
 
+uplink_mode_t __xdata gu8ULTestMode = ULTMODE_INIT;
+UINT8 __xdata gu8ULTestData = 0;
+
 UINT32 __xdata gpu32UartSpeed[] = {
 	2400, // 0
 	28800, // 1
@@ -693,6 +696,17 @@ void process_my_packet(linefi_packet_t * apstLineFiPkt)
 	}
 }
 
+void set_uplink_test_mode(uplink_mode_t au8Mode, UINT8 au8Data)
+{
+	/*
+
+
+	*/
+
+	gu8ULTestMode = au8Mode;
+	gu8ULTestData = au8Data;
+}
+
 void process_all_packet(linefi_packet_t * apstLineFiPkt)
 {
 	switch(apstLineFiPkt->u8Type) {
@@ -707,6 +721,14 @@ void process_all_packet(linefi_packet_t * apstLineFiPkt)
 		case Type_Bcast :
 			break;
 		case Type_Mcast :
+			break;
+		case Type_UpLinkTest :
+			InitialUART1_Timer3(
+					(apstLineFiPkt->pu8Data[0] << 16) 
+					| (apstLineFiPkt->pu8Data[1] << 8) 
+					| (apstLineFiPkt->pu8Data[2]));
+
+			set_uplink_test_mode((uplink_mode_t)(apstLineFiPkt->pu8Data[3]), apstLineFiPkt->pu8Data[4]);
 			break;
 	}
 }
@@ -752,7 +774,7 @@ void main (void)
 	uint8 u8MotorState = MS_STOP;
 
 	UINT8 u8RxBufIdx = 0;
-	UINT8 u8RxLineFiLen = 0;
+	UINT8 u8RxLFPLen = 0; //UINT8 u8RxLineFiLen = 0; 변수 이름 바꿈, 수신된 LineFiPacket 길이
 #define MAX_RX_BUF_LEN 10
 	UINT8 pu8LineFiRx[MAX_RX_BUF_LEN];
 	UINT8 u8LineFiRxIdx = 0;
@@ -878,6 +900,20 @@ void main (void)
 			putchar_manchester('0');
 			putchar_manchester('0');
 		}
+		else {
+			switch(gu8ULTestMode) {
+				case ULTMODE_INIT:
+					break;
+				case ULTMODE_PREAMBLE:
+					preamble();
+					break;
+				case ULTMODE_DATA:
+					putchar_manchester(gu8ULTestData);
+					break;
+			}
+
+		}
+
 		if (u8UartRx != UART_RX) {
 //			printf_fast_f("UART_RX:%d\n\r", UART_RX);
 //			u8UartRx = UART_RX;
@@ -898,13 +934,13 @@ void main (void)
 					pu8RxUART[u8RxBufIdx++] = u8RxUART;
 				}
 				else if (gu16TimeCnt > 1000) { // 1msec넘으면
-					u8RxLineFiLen = u8RxBufIdx;
+					u8RxLFPLen = u8RxBufIdx;
 					u8StateRxPkt = STATE_RxPKT_END;
 				}
 			break;
 
 			case STATE_RxPKT_END :
-			switch(u8RxLineFiLen) {
+			switch(u8RxLFPLen) {
 				case 1 : // 1 옥텟 수신, 초기 라인파이 임시 프로토콜
 					if (chk_my_addr(MY_ADDR, pu8RxUART[0])) {
 						//				rot_motor(u8RxUART);
@@ -914,16 +950,16 @@ void main (void)
 					u8StateRxPkt = STATE_RxPKT_INIT;
 					break;
 				default : // 가변 옥텟(8  이상) 길이의  라이인파이 패킷 수신
-					if ( u8RxLineFiLen < 8) { // 
+					if ( u8RxLFPLen < 8) { // 
 						UINT8 i;
-						printf_fast_f("Rx size:%d\n\r", u8RxLineFiLen);
-						for (i=0; i<u8RxLineFiLen;i++) {
+						printf_fast_f("Rx size:%d\n\r", u8RxLFPLen);
+						for (i=0; i<u8RxLFPLen;i++) {
 							printf_fast_f("0x%x ", pu8RxUART[i]);
 						}
 						printf_fast_f("\n\r");
 					}
 					else {
-						cp_buf2linefipacket(u8RxLineFiLen, pu8RxUART, &stLineFiPkt);
+						cp_buf2linefipacket(u8RxLFPLen, pu8RxUART, &stLineFiPkt);
 						process_all_packet(&stLineFiPkt);
 						//print_linefipacket(&stLineFiPkt);
 						if (gu8MyAddr == stLineFiPkt.u8Addr) {

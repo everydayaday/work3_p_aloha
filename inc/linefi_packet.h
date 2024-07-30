@@ -27,16 +27,24 @@ enum {
 	Type_SetLED,
 	Type_CtrlMotor,
 	Type_ReadAddr,
+	Type_UpLinkTest,
 	Type_None
 };
+
+typedef enum {
+	ULTMODE_INIT,
+	ULTMODE_PREAMBLE,
+	ULTMODE_DATA,
+	ULTMODE_NONE
+} uplink_mode_t;
 
 typedef struct {
 	uint8 u8Ver;
 	uint8 u8Type;
 	uint8 u8Addr;
-	uint8 u8Size;
+	uint8 u8Size; // 헤더 포함 총 길이, 5이면 페이로드 없음.
 	uint8 u8CRC;
-	uint8 * pu8Data;
+	uint8 * pu8Data; // 길이 [u8Size-5]인 옥텟 스트링
 } linefi_packet_t;
 
 uint8 size_linefi_packet(linefi_packet_t * apstLineFiPkt);

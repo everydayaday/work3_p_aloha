@@ -104,17 +104,25 @@ void send_linefi_packet(linefi_packet_t * apstLineFiPkt)
 
 uint8 cp_buf2linefipacket(uint8 au8Size, uint8 * apu8RxBuf, linefi_packet_t * apstLineFiPkt)
 {
+	/*
+	유아트로 수신된 [au8Size]옥텟을 라인파이패킷 변수에 저장
+	*/
 	if (au8Size < 5) {
+		// 5옥텟 이상이어야 함
 		return CONV_ERR_TOO_SMALLSIZE;
 	}
 
 	uint8 * pu8Buf = (uint8 *) apstLineFiPkt;
+
+	//라인파이패킷 헤더 복사
 	*pu8Buf++ = *apu8RxBuf++;
 	*pu8Buf++ = *apu8RxBuf++;
 	*pu8Buf++ = *apu8RxBuf++;
 	*pu8Buf++ = *apu8RxBuf++;
 	*pu8Buf++ = *apu8RxBuf++;
 	uint8 i;
+
+	//라인파이패킷 페이로드 복사
 	for (i=0;i<apstLineFiPkt->u8Size;i++) {
 		apstLineFiPkt->pu8Data[i] = *apu8RxBuf++;
 	}
