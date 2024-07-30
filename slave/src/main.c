@@ -750,7 +750,7 @@ void process_all_packet(linefi_packet_t * apstLineFiPkt)
 					apstLineFiPkt->pu8Data[2]);
 
 
-			set_uplink_test_mode((uplink_mode_t)(apstLineFiPkt->pu8Data[3]), apstLineFiPkt->pu8Data[4]);
+//			set_uplink_test_mode((uplink_mode_t)(apstLineFiPkt->pu8Data[3]), apstLineFiPkt->pu8Data[4]);
 			break;
 	}
 }
@@ -1017,7 +1017,6 @@ void main (void)
 						cp_buf2linefipacket(u8RxLFPLen, pu8RxUART, &stLineFiPkt);
 						print_linefipacket(&stLineFiPkt);
 						process_all_packet(&stLineFiPkt);
-						print_linefipacket(&stLineFiPkt);
 						if (gu8MyAddr == stLineFiPkt.u8Addr) {
 							process_my_packet(&stLineFiPkt);
 						}
