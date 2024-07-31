@@ -4,13 +4,14 @@ typedef __bit                   BIT;
 typedef __bit                   bit;
 typedef unsigned char         UINT8;
 typedef unsigned char         uint8;
+typedef unsigned char         uint8_t;
+
 typedef unsigned int          UINT16;
 typedef unsigned int          uint16;
+typedef unsigned int          uint16_t;
+
 typedef unsigned long         UINT32;
 typedef unsigned long         uint32;
-
-typedef unsigned char         uint8_t;
-typedef unsigned int          uint16_t;
 typedef unsigned long         uint32_t;
 
 

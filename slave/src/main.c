@@ -19,7 +19,7 @@
 #include "Delay.h"
 #include "SFR_Macro.h"
 #include "Function_define.h"
-#include "uart.h"
+#include "uart_isr.h"
 #include "linefi_packet.h"
 #include "eeprom_iap.h"
 

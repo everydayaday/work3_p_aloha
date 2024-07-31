@@ -164,3 +164,275 @@ void uart_setup()
   set_EA;
 }
 /*==========================================================================*/
+
+
+
+#if 0
+
+/*---------------------------------------------------------------------------------------------------------*/
+/*                                                                                                         */
+/* Copyright(c) 2017 Nuvoton Technology Corp. All rights reserved.                                         */
+/*                                                                                                         */
+/*---------------------------------------------------------------------------------------------------------*/
+
+//***********************************************************************************************************
+//  Nuvoton Technoledge Corp.
+//  Website: http://www.nuvoton.com
+//  E-Mail : MicroC-8bit@nuvoton.com
+//  Date   : Apr/21/2017
+//***********************************************************************************************************
+
+//***********************************************************************************************************
+//  File Function: N76E003 UART-0 Mode3 demo code
+//***********************************************************************************************************
+#include "N76E003.h"
+
+
+
+
+
+#define BUFFER_SIZE		16
+UINT8  UART_BUFFER[BUFFER_SIZE],temp;
+UINT16 u16CNT=0,u16CNT1=0;
+bit riflag;
+
+
+/**
+ * FUNCTION_PURPOSE: serial interrupt, echo received data.
+ * FUNCTION_INPUTS: P0.7(RXD) serial input
+ * FUNCTION_OUTPUTS: P0.6(TXD) serial output
+ */
+void SerialPort0_ISR(void) interrupt 4
+{
+	if (RI==1)
+	{                                       /* if reception occur */
+		clr_RI;                             /* clear reception flag for next reception */
+		UART_BUFFER[u16CNT] = SBUF;
+		u16CNT ++;
+		riflag =1;
+	}
+	if(TI==1)
+	{
+		clr_TI;                             /* if emission occur */
+	}
+}
+
+/************************************************************************************************************
+ *    Main function
+ ************************************************************************************************************/
+void main (void)
+{
+	P12_PushPull_Mode;
+	P06_Quasi_Mode;
+	P07_Quasi_Mode;
+
+	SCON = 0xD0;			// Special setting the mode 3 and
+	TMOD |= 0x20;    	//Timer1 Mode1
+
+	set_SMOD;        	//UART0 Double Rate Enable
+	set_T1M;
+	clr_BRCK;        	//Serial port 0 baud rate clock source = Timer1
+	TH1 = 256 - (1000000/115200+1);               /*16 MHz */
+	set_TR1;
+
+	set_RB8;					//This bit is for setting the stop bit 2 high/low status,
+
+	clr_TI;
+	set_ES;           //enable UART interrupt
+	set_EA;           //enable global interrupt
+
+	while(1)
+	{
+		if (riflag)
+		{
+			P12 = ~P12;		//In debug mode check UART_BUFFER[u16CNT] to check receive data
+			riflag = 0;
+		}
+	}
+
+}
+
+#endif
+#if 0
+
+/*---------------------------------------------------------------------------------------------------------*/
+/*                                                                                                         */
+/* Copyright(c) 2017 Nuvoton Technology Corp. All rights reserved.                                         */
+/*                                                                                                         */
+/*---------------------------------------------------------------------------------------------------------*/
+
+//***********************************************************************************************************
+//  Nuvoton Technoledge Corp.
+//  Website: http://www.nuvoton.com
+//  E-Mail : MicroC-8bit@nuvoton.com
+//  Date   : Apr/21/2017
+//***********************************************************************************************************
+
+//***********************************************************************************************************
+//  File Function: N76E003 UART-1 Mode1 demo code
+//***********************************************************************************************************
+#include "N76E003.h"
+
+
+
+
+
+#define BUFFER_SIZE		16
+UINT8  UART_BUFFER[BUFFER_SIZE],temp;
+UINT16 u16CNT=0,u16CNT1=0;
+bit riflag;
+
+/******************************************************************************
+ * FUNCTION_PURPOSE: Serial port 1 interrupt, echo received data.
+ * FUNCTION_INPUTS : P0.2(RXD) serial input
+ * FUNCTION_OUTPUTS: P1.6(TXD) serial output
+ * Following setting in Common.c
+ ******************************************************************************/
+#if 0
+//void InitialUART1_Timer3(UINT32 u32Baudrate) //use timer3 as Baudrate generator
+//{
+//		P02_Quasi_Mode;		//Setting UART pin as Quasi mode for transmit
+//		P16_Quasi_Mode;		//Setting UART pin as Quasi mode for transmit
+//
+//	  SCON_1 = 0x50;   	//UART1 Mode1,REN_1=1,TI_1=1
+//    T3CON = 0x08;   	//T3PS2=0,T3PS1=0,T3PS0=0(Prescale=1), UART1 in MODE 1
+//		clr_BRCK;
+//
+//#ifdef FOSC_160000
+//		RH3    = HIBYTE(65536 - (1000000/u32Baudrate)-1);  		/*16 MHz */
+//		RL3    = LOBYTE(65536 - (1000000/u32Baudrate)-1);			/*16 MHz */
+//#endif
+//#ifdef FOSC_166000
+//		RH3    = HIBYTE(65536 - (1037500/u32Baudrate));  			/*16.6 MHz */
+//		RL3    = LOBYTE(65536 - (1037500/u32Baudrate));				/*16.6 MHz */
+//#endif
+//    set_TR3;         //Trigger Timer3
+//}
+#endif
+
+void SerialPort1_ISR(void) interrupt 15
+{
+	if (RI_1==1)
+	{                                       /* if reception occur */
+		clr_RI_1;                             /* clear reception flag for next reception */
+		UART_BUFFER[u16CNT] = SBUF_1;
+		u16CNT ++;
+		riflag =1;
+	}
+	if(TI_1==1)
+	{
+		clr_TI_1;                             /* if emission occur */
+	}
+}
+
+
+/****************************************************************************************************************
+ * FUNCTION_PURPOSE: Main function
+
+ !!! N76E003 UART1 pin also occupied by debug pin,
+ please remove Nu-link or not in debug mode to test UART1 function.
+
+ External UART1 connect also disturb debug download
+
+ ***************************************************************************************************************/
+void main (void)
+{
+	P12_PushPull_Mode;		// For I/O toggle display
+
+#if 0
+	//for Simple use UART1 transmit out
+	InitialUART1_Timer3(115200);
+	while(1)
+		Send_Data_To_UART1(0x55);
+
+#else
+	// For interrupt setting check receive
+	InitialUART1_Timer3(115200);
+	set_ES_1;					//For interrupt enable
+	set_EA;
+
+	while(1)
+	{
+		if (riflag)
+		{
+			P12 = ~ P12;			//Receive each byte P12 toggle, never work under debug mode
+			riflag = 0;
+		}
+	}
+
+#endif
+
+
+
+}
+#endif
+#if 1
+
+/*
+ * N76E003 UART echo with interrupt.
+ *   UART0: P0.7(RXD) P0.6(TXD)
+ *   UART1: P0.2(RXD) P1.6(TXD)
+ *
+ * arad.rgb@gmail.com
+ */
+#include "N76E003.h"
+#include "Common.h"
+#include "Delay.h"
+#include "SFR_Macro.h"
+#include "Function_define.h"
+
+#define UART_INDEX		(1)
+#define UART_BAUDRATE	(115200)
+
+uint8_t uart_data;
+bit_t uart_ri_flag;
+
+#if UART_INDEX
+void SerialPort1_ISR(void) __interrupt 15
+{
+	if (RI_1) {					// uart rx done
+		clr_RI_1;				// clear rx flag
+		uart_data = SBUF_1;
+		uart_ri_flag = 1;
+	}
+	if(TI_1) {					// uart tx done
+		clr_TI_1;				// clear tx flag
+	}
+}
+#else
+void SerialPort0_ISR(void) __interrupt 4
+{
+	if (RI) {					// uart rx done
+		clr_RI;					// clear rx flag
+		uart_data = SBUF;
+		uart_ri_flag = 1;
+	}
+	if(TI) {					// uart tx done
+		clr_TI;					// clear tx flag
+	}
+}
+#endif
+
+void main(void)
+{
+#if UART_INDEX
+	InitialUART1_Timer3(UART_BAUDRATE);
+	set_ES_1;					// enable uart interrupt
+#else
+	InitialUART0_Timer3(UART_BAUDRATE);
+	set_ES;						// enable uart interrupt
+#endif
+	set_EA;
+
+	while(1) {
+		if (uart_ri_flag) {
+			uart_ri_flag = 0;
+#if UART_INDEX
+			Send_Data_To_UART1(uart_data);
+#else
+			Send_Data_To_UART0(uart_data);
+#endif
+		}
+	}
+}
+#endif
