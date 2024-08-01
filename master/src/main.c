@@ -1206,7 +1206,7 @@ void main (void)
 							break;
 					}
 #endif
-#if 1 // 4비트,4비트 동작
+#if 0 // 4비트,4비트 동작
 					switch(u8SwNum) {
 						case (1<<3) : // down SW1
 							u8LineFiAddr--;
@@ -1256,6 +1256,51 @@ void main (void)
 							break;
 					}
 #endif
+#if 1 // 상향 신호 제어
+					switch(u8SwNum) {
+						case (1<<3) : // down SW1
+							stLineFiPkt.u8Type = Type_UpLinkTest;
+							make_linefi_payload(gpu32UartSpeed[u8LineFiSpeed], ULTMODE_INIT, 0, pu8Data);
+							stLineFiPkt.u8Size = 10;
+							stLineFiPkt.pu8Data = pu8Data;
+
+							send_linefi_packet(&stLineFiPkt);
+							print_linefipacket(&stLineFiPkt);
+							break;
+
+						case (1<<1) : // right SW2
+							stLineFiPkt.u8Type = Type_UpLinkTest;
+							make_linefi_payload(gpu32UartSpeed[u8LineFiSpeed], ULTMODE_PREAMBLE, 0, pu8Data);
+							stLineFiPkt.u8Size = 10;
+							stLineFiPkt.pu8Data = pu8Data;
+
+							send_linefi_packet(&stLineFiPkt);
+							print_linefipacket(&stLineFiPkt);
+							break;
+
+						case (1<<4) : // center SW3
+							stLineFiPkt.u8Type = Type_UpLinkTest;
+							make_linefi_payload(gpu32UartSpeed[u8LineFiSpeed], ULTMODE_DATA, 0, pu8Data);
+							stLineFiPkt.u8Size = 10;
+							stLineFiPkt.pu8Data = pu8Data;
+
+							send_linefi_packet(&stLineFiPkt);
+							print_linefipacket(&stLineFiPkt);
+							break;
+
+						case (1<<2) : //  left SW4
+							stLineFiPkt.u8Type = Type_UpLinkTest;
+							make_linefi_payload(gpu32UartSpeed[u8LineFiSpeed], ULTMODE_DATA, 0xff, pu8Data);
+							stLineFiPkt.u8Size = 10;
+							stLineFiPkt.pu8Data = pu8Data;
+
+							send_linefi_packet(&stLineFiPkt);
+							print_linefipacket(&stLineFiPkt);
+							break;
+						case (1<<0) : // up SW5
+							break;
+					}
+#endif
 			} //switch (state_switches((SW_U<<0)| (SW_R<<1)| (SW_L<<2)| (SW_D<<3) | (SW_C<<4), &u8SwNum))
 		}
 		
@@ -1300,8 +1345,5 @@ void main (void)
 				}
 				break;
 		}
-
-
-
 	} //while(1)
 }
