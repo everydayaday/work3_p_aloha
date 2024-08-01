@@ -14,12 +14,21 @@
 //***********************************************************************************************************
 //  File Function: N76E003 Timer0/1 Mode1 demo code
 //***********************************************************************************************************
+
+#define _USING_UART_ISR_
+
 #include "N76E003.h"
 #include "Common.h"
 #include "Delay.h"
 #include "SFR_Macro.h"
 #include "Function_define.h"
+
+#ifdef _USING_UART_ISR_
 #include "uart_isr.h"
+#else
+#include "uart.h"
+#endif
+
 #include "linefi_packet.h"
 #include "eeprom_iap.h"
 
@@ -114,6 +123,17 @@ UINT16 gu16TimeCnt = 0;
 UINT32 gu32TimeCnt = 0;
 
 /* Needed for printf */
+#ifdef _USING_UART_ISR_
+void putchar (char c) 
+{
+	if (gu8UART == 0)  {
+		putchar_uart0(c);
+	}
+	else {
+		putchar_uart1(c);
+	}
+}
+#else
 void putchar (char c) 
 {
 	if (gu8UART == 0)  {
@@ -127,6 +147,7 @@ void putchar (char c)
 		while(TI_1==0);
 	}
 }
+#endif
 
 UINT8 conv_nibble2manchester (UINT8 c)
 {
@@ -752,6 +773,13 @@ void process_all_packet(linefi_packet_t * apstLineFiPkt)
 	}
 }
 
+char get_uart0_char_nb(char * apcResult)
+{
+#if 0
+	return Receive_Data_From_UART0_nb(apcResult);
+#else
+#endif
+}
 /************************************************************************************************************
  *    Main function 
  ************************************************************************************************************/
@@ -799,7 +827,8 @@ void main (void)
 	UINT8 u8LineFiRxIdx = 0;
 
 	gpio_setup();
-	uart_setup();
+	//uart_setup();
+	uart_isr_setup();
 	InitialUART1_Timer3(57600);
 	//InitialUART1_Timer3(115200);
 	//InitialUART1_Timer3(230400);
@@ -841,7 +870,7 @@ void main (void)
 	while(1) {
 #if 1
 #if 1
-		if (Receive_Data_From_UART0_nb(&u8RxUART)) {
+		if (get_uart0_char_nb(&u8RxUART)) {
 			switch(u8RxUART) {
 				case '1' :
 					TOGGLE(UART_TX);
@@ -897,7 +926,7 @@ void main (void)
 					}
 					break;
 			}
-		} // if (Receive_Data_From_UART0_nb(&u8RxUART))
+		} // if (get_uart0_char_nb(&u8RxUART))
 #endif
 		if (u8PrevSwitch != SWITCH) { // 스위치 스테이트가 변하면..
 			gu8UART = 0;

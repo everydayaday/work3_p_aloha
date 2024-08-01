@@ -10,7 +10,8 @@
 //***********************************************************************************************************
 
 #include "linefi_packet.h"
-#include "uart.h"
+//#include "uart.h"
+#include "uart_isr.h"
 
 uint16 gu16Cnt = 0;
 
@@ -77,12 +78,14 @@ uint8 chk_crc_linefi_packet_packet(linefi_packet_t * apstLineFiPkt)
 // just wrapper function
 UINT8 get_octet_from_linefi(UINT8 * apu8Tmp)
 {
-	return Receive_Data_From_UART1_nb(apu8Tmp);
+//	return Receive_Data_From_UART1_nb(apu8Tmp);
+	return getchar_uart1(apu8Tmp);
 }
 
 void send_octet_to_linefi(UINT8 au8Data)
 {
-	return Send_Data_To_UART1(au8Data);
+//	return Send_Data_To_UART1(au8Data);
+	return putchar_uart1(au8Data);
 }
 
 void send_linefi_packet(linefi_packet_t * apstLineFiPkt)
