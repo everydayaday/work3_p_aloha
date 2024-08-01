@@ -34,10 +34,10 @@ uint8_t __xdata gu8Tx1WIdx = 0;
 //uint8_t __xdata tx0_idle = TRUE;
 //uint8_t __xdata tx1_idle = TRUE;
 
-uint8_t gu8Uart0RCnt = 0;
-uint8_t gu8Uart0TCnt = 0;
-uint8_t gu8Uart1RCnt = 0;
-uint8_t gu8Uart1TCnt = 0;
+uint8_t __xdata gu8Uart0RCnt = 0;
+uint8_t __xdata gu8Uart0TCnt = 0;
+uint8_t __xdata gu8Uart1RCnt = 0;
+uint8_t __xdata gu8Uart1TCnt = 0;
 
 
 void InitialUART0_Timer1(UINT32 u32Baudrate);    //T1M = 1, SMOD = 1
@@ -100,10 +100,10 @@ void InitialUART1_Timer3(UINT32 u32Baudrate) //use timer3 as Baudrate generator
 void uart_isr_setup() 
 {
 	/*
-	   300, 600, 1200, 2400, 4800, 9600, 14400, 19200, 28800, 38400, 57600,  115200
+	   300, 600, 1200, 2400, 4800, 9600, 14400, 19200, 28800, 38400, 57600,  115200, 230400
 	 */
 	InitialUART0_Timer1(115200);
-	InitialUART1_Timer3(115200);
+	InitialUART1_Timer3(230400);
 
 	set_ES;
 	set_ES_1;

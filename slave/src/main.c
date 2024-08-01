@@ -829,7 +829,7 @@ void main (void)
 	gpio_setup();
 	//uart_setup();
 	uart_isr_setup();
-	InitialUART1_Timer3(57600);
+	//InitialUART1_Timer3(57600);
 	//InitialUART1_Timer3(115200);
 	//InitialUART1_Timer3(230400);
 
@@ -934,8 +934,8 @@ void main (void)
 			if (SWITCH) { //눌렸을 때
 			}
 			else { //떨어질 때
-				//InitialUART1_Timer3(230400);
-				InitialUART1_Timer3(57600);
+				InitialUART1_Timer3(230400);
+				//InitialUART1_Timer3(57600);
 				gu8UART = 0;
 				//printf_fast_f("uart speed: 230400:\n\r");
 				printf_fast_f("uart speed: 57600:\n\r");

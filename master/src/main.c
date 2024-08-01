@@ -19,7 +19,7 @@
 #include "Delay.h"
 #include "SFR_Macro.h"
 #include "Function_define.h"
-#include "uart.h"
+#include "uart_isr.h"
 #include "linefi_packet.h"
 
 #define KEY_ESC (27)
@@ -132,14 +132,10 @@ UINT8 gu8UART = 0;
 void putchar (char c) 
 {
 	if (gu8UART == 0)  {
-		TI = 0;
-		SBUF = c;
-		while(TI==0);
+		putchar_uart0(c);
 	}
 	else {
-		TI_1 = 0;
-		SBUF_1 = c;
-		while(TI_1==0);
+		putchar_uart1(c);
 	}
 }
 
@@ -812,7 +808,7 @@ void main (void)
 	};
 
 	gpio_setup();
-	uart_setup();
+	uart_isr_setup();
 
 	MODIFY_HIRC_166();
 
@@ -863,7 +859,7 @@ void main (void)
 	while(1) {
 #if 0 // uart0를 받아서 uart1으로 전달
 #else // CLI
-		if (Receive_Data_From_UART0_nb(&u8RxUART)) { // 유아트 입력이 있을 때
+		if (getchar_uart0(&u8RxUART)) { // 유아트 입력이 있을 때
 			switch(u8RxUART) {
 				case KEY_ESC :
 					u8StateUart0InputMode++;
@@ -1040,7 +1036,7 @@ void main (void)
 					} //switch(u8StateUart0InputMode)
 					break;
 			} //switch(u8RxUART)
-		} //if (Receive_Data_From_UART0_nb(&u8RxUART))
+		} //if (getchar_uart0(&u8RxUART))
 		else { // 유아트 입력이 없을 떄, 백그라운드로 실행
 			switch(u8StateUart0InputMode) {
 				case UART0_INPUT_MODE0 :
@@ -1266,7 +1262,7 @@ void main (void)
 #endif
 
 #if 0
-		if (Receive_Data_From_UART0_nb(&u8RxUART)) {
+		if (getchar_uart0(&u8RxUART)) {
 			send_octet_to_linefi(u8RxUART);
 		}
 #endif
