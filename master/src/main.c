@@ -105,7 +105,7 @@ UINT8 __xdata gpu8Data2[20] = {
 };
 
 #define LINEFI_DEFAULT_RATE	57600
-#define LINEFI_DEFAULT_RATE_IDX	3
+#define LINEFI_DEFAULT_RATE_IDX	5
 
 uint16 __xdata gu16TimeCnt;
 uint16 __xdata gu16TimeCntMilliSec;

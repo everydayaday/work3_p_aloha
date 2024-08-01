@@ -10,6 +10,10 @@
 #define UART1_RX_BUFF_SIZE 16
 #define UART1_TX_BUFF_SIZE 16
 
+#define UART0_TX_GAP 100
+//#define UART1_TX_GAP 100
+#define UART1_TX_GAP 10
+
 uint8_t __xdata pu8UartRx0Buf[UART0_RX_BUFF_SIZE] = {0};
 uint8_t __xdata pu8UartTx0Buf[UART0_TX_BUFF_SIZE] = {0};
 uint8_t __xdata pu8UartRx1Buf[UART1_RX_BUFF_SIZE] = {0};
@@ -122,7 +126,7 @@ void Uart0Tx_ISR()
 	// gu8Tx0Size == 1인 경우는 putchar_uart0()에서 직접 불린 경우일 수도 있음
 #if 1
 	int i;
-	for (i = 0; i< 1000;i++) {
+	for (i = 0; i< UART0_TX_GAP;i++) {
 		nop; nop; nop; nop;
 	}
 #endif
@@ -215,7 +219,7 @@ void Uart1Tx_ISR()
 	// gu8Tx1Size == 1인 경우는 putchar_uart1()에서 직접 불린 경우일 수도 있음
 #if 1
 	int i;
-	for (i = 0; i< 1000;i++) {
+	for (i = 0; i< UART1_TX_GAP;i++) {
 		nop; nop; nop; nop;
 	}
 #endif

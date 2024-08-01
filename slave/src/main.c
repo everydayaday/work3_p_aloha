@@ -768,7 +768,7 @@ void process_all_packet(linefi_packet_t * apstLineFiPkt)
 					apstLineFiPkt->pu8Data[2]);
 
 
-//			set_uplink_test_mode((uplink_mode_t)(apstLineFiPkt->pu8Data[3]), apstLineFiPkt->pu8Data[4]);
+			set_uplink_test_mode((uplink_mode_t)(apstLineFiPkt->pu8Data[3]), apstLineFiPkt->pu8Data[4]);
 			break;
 	}
 }
@@ -938,7 +938,7 @@ void main (void)
 				//InitialUART1_Timer3(57600);
 				gu8UART = 0;
 				//printf_fast_f("uart speed: 230400:\n\r");
-				printf_fast_f("uart speed: 57600:\n\r");
+				printf_fast_f("uart speed: 230400:\n\r");
 
 #if 1
 				static uint8 su8Cnt = 0;
@@ -960,8 +960,9 @@ void main (void)
 //			TOGGLE(UART_TX);
 			preamble();
 			preamble();
-			putchar_manchester('0');
-			putchar_manchester('0');
+//			putchar_manchester('0');
+//			putchar_manchester('0');
+			gu8ULTestMode = ULTMODE_INIT;
 		}
 		else {
 			switch(gu8ULTestMode) {
@@ -969,8 +970,14 @@ void main (void)
 					break;
 				case ULTMODE_PREAMBLE:
 					preamble();
+					preamble();
+					preamble();
+					preamble();
 					break;
 				case ULTMODE_DATA:
+					putchar_manchester(gu8ULTestData);
+					putchar_manchester(gu8ULTestData);
+					putchar_manchester(gu8ULTestData);
 					putchar_manchester(gu8ULTestData);
 					break;
 			}
