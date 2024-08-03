@@ -1,7 +1,7 @@
 #define _USING_UART_ISR_
 
-#define FOSC_160000
-//#define FOSC_166000
+//#define FOSC_160000
+#define FOSC_166000
 
 #include "Common.h"
 #include "N76E003.h"
