@@ -23,11 +23,7 @@
 #include "SFR_Macro.h"
 #include "Function_define.h"
 
-#ifdef _USING_UART_ISR_
-#include "uart_isr.h"
-#else
 #include "uart.h"
-#endif
 
 #include "linefi_packet.h"
 #include "eeprom_iap.h"
@@ -778,6 +774,7 @@ char get_uart0_char_nb(char * apcResult)
 #if 0
 	return Receive_Data_From_UART0_nb(apcResult);
 #else
+	return getchar_uart0(apcResult);
 #endif
 }
 /************************************************************************************************************
