@@ -689,7 +689,7 @@ void main (void)
 	while(1) {
 #if 1
 #if 1
-		if (Receive_Data_From_UART0_nb(&u8RxUART)) {
+		if (getchar_uart0(&u8RxUART)) {
 			switch(u8RxUART) {
 				case 'z' :
 					gu16SlitCnt = 0;
@@ -806,7 +806,7 @@ void main (void)
 			printf_fast_f("RotSense:%d\n\r", ROT_SENSE);
 			u8RotSense = ROT_SENSE;
 		}
-		if (Receive_Data_From_UART1_nb(&u8RxUART)) {
+		if (getchar_uart1(&u8RxUART)) {
 			if (chk_my_addr(MY_ADDR, u8RxUART)) {
 				rot_motor(u8RxUART);
 			}
@@ -814,7 +814,7 @@ void main (void)
 #if 0
 		switch(u8LineFiRxState) {
 			case STATE_LINEFI_RX_INIT :
-				if (Receive_Data_From_UART1_nb(&u8RxUART)) {
+				if (getchar_uart1(&u8RxUART)) {
 					pu8LineFiRx[0] = u8RxUART;
 					u8LineFiRxIdx = 1;
 
@@ -823,7 +823,7 @@ void main (void)
 				}
 				break;
 			case STATE_LINEFI_RX_START :
-				if (Receive_Data_From_UART1_nb(&u8RxUART)) {
+				if (getchar_uart1(&u8RxUART)) {
 					pu8LineFiRx[u8LineFiRxIdx] = u8RxUART;
 					u8LineFiRxIdx++;
 					gu16MilliSecCnt = 0;
@@ -870,7 +870,7 @@ void main (void)
 		}
 
 
-		if (Receive_Data_From_UART0_nb(&u8RxUART)) {
+		if (getchar_uart0(&u8RxUART)) {
 			switch(u8RxUART) {
 				case '1' :
 					TOGGLE(UART_TX);
@@ -914,12 +914,12 @@ void main (void)
 					printf_fast_f("%d\n\r", SEL_RX_POL);
 					break;
 			}
-		} //if (Receive_Data_From_UART0_nb(&u8RxUART))
-		  //		if (Receive_Data_From_UART1_nb(&u8RxUART)) {
+		} //if (getchar_uart0(&u8RxUART))
+		  //		if (getchar_uart1(&u8RxUART)) {
 
-		  //		} //if (Receive_Data_From_UART1_nb(&u8RxUART))
+		  //		} //if (getchar_uart1(&u8RxUART))
 
-		if (Receive_Data_From_UART1_nb(&u8RxUART)) {
+		if (getchar_uart1(&u8RxUART)) {
 			switch(u8RxUART) {
 				case 0x33 :
 					TOGGLE(LED_R);

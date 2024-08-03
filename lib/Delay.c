@@ -11,6 +11,9 @@
 //  Date   : Apr/21/2016
 //***********************************************************************************************************
 
+#define FOSC_160000		// if Fsys = 16MHz 
+//#define FOSC_166000		// if Fsys = 16.6MHz 
+
 #include "N76E003.h"
 #include "Common.h"
 #include "Delay.h"

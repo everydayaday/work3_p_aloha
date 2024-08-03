@@ -629,7 +629,7 @@ void main (void)
 
 	P03 = 0;
 	while(1) {
-		if (Receive_Data_From_UART0_nb(&u8RxUART)) {
+		if (getchar_uart0(&u8RxUART)) {
 			if (u8RxUARTSpeedSetting) {
 				if ((gucMyAddr == 0x00) && ((u8RxUART & MSK_CMD) == LINEFI_CMD_ADDRESSING)) {
 					// 초기 펌웨어 로딩 직후 어드레스 할당
@@ -751,7 +751,7 @@ void main (void)
 				}
 			}
 #if 1
-		} //if (Receive_Data_From_UART0_nb(&u8RxUART))
+		} //if (getchar_uart0(&u8RxUART))
 #endif
 	} //while(1)
 }
