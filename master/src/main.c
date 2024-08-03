@@ -19,7 +19,9 @@
 #include "Delay.h"
 #include "SFR_Macro.h"
 #include "Function_define.h"
-#include "uart_isr.h"
+
+//#define _USING_UART_ISR_
+#include "uart.h"
 #include "linefi_packet.h"
 
 #define KEY_ESC (27)
@@ -129,7 +131,7 @@ UINT32 __xdata gpu32UartSpeed[] = {
 UINT8 gu8UART = 0;
 
 /* Needed for printf */
-void putchar (char c) 
+void putchar(char c) 
 {
 	if (gu8UART == 0)  {
 		putchar_uart0(c);
@@ -808,7 +810,7 @@ void main (void)
 	};
 
 	gpio_setup();
-	uart_isr_setup();
+	uart_setup();
 
 	MODIFY_HIRC_166();
 

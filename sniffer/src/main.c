@@ -14,6 +14,9 @@
 //***********************************************************************************************************
 //  File Function: N76E003 Timer0/1 Mode1 demo code
 //***********************************************************************************************************
+
+#define _USING_UART_ISR_
+
 #include "N76E003.h"
 #include "Common.h"
 #include "Delay.h"
@@ -106,6 +109,8 @@ UINT32 __xdata gpu32UartSpeed[] = {
 
 UINT8 gu8UART = 0;
 UINT16 gu16TimeCnt = 0;
+
+void InitialUART1_Timer3(UINT32);
 
 /* Needed for printf */
 void putchar (char c) 
@@ -780,7 +785,7 @@ void main (void)
 	while(1) {
 #if 1
 #if 1
-		if (Receive_Data_From_UART0_nb(&u8RxUART)) {
+		if (getchar_uart1(&u8RxUART)) {
 			switch(u8RxUART) {
 				case '1' :
 					TOGGLE(UART_TX);
@@ -858,7 +863,7 @@ void main (void)
 #endif
 		switch(u8StateRxLFP) {
 			case STATE_RxLFP_INIT :
-				if (Receive_Data_From_UART1_nb(&u8RxUART)) {
+				if (getchar_uart1(&u8RxUART)) {
 					gu16TimeCnt = 0;
 					u8RxIdx = 0;
 					pu8RxUART[u8RxIdx++] = u8RxUART;
@@ -866,7 +871,7 @@ void main (void)
 				}
 				break;
 			case STATE_RxLFP_START :
-				if (Receive_Data_From_UART1_nb(&u8RxUART)) {
+				if (getchar_uart1(&u8RxUART)) {
 					gu16TimeCnt = 0;
 					pu8RxUART[u8RxIdx++] = u8RxUART;
 				}

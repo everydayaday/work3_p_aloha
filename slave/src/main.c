@@ -119,7 +119,6 @@ UINT16 gu16TimeCnt = 0;
 UINT32 gu32TimeCnt = 0;
 
 /* Needed for printf */
-#ifdef _USING_UART_ISR_
 void putchar (char c) 
 {
 	if (gu8UART == 0)  {
@@ -129,21 +128,6 @@ void putchar (char c)
 		putchar_uart1(c);
 	}
 }
-#else
-void putchar (char c) 
-{
-	if (gu8UART == 0)  {
-		TI = 0;
-		SBUF = c;
-		while(TI==0);
-	}
-	else {
-		TI_1 = 0;
-		SBUF_1 = c;
-		while(TI_1==0);
-	}
-}
-#endif
 
 UINT8 conv_nibble2manchester (UINT8 c)
 {
@@ -824,8 +808,7 @@ void main (void)
 	UINT8 u8LineFiRxIdx = 0;
 
 	gpio_setup();
-	//uart_setup();
-	uart_isr_setup();
+	uart_setup();
 	//InitialUART1_Timer3(57600);
 	//InitialUART1_Timer3(115200);
 	//InitialUART1_Timer3(230400);
