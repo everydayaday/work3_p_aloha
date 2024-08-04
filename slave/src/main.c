@@ -592,6 +592,7 @@ void process_all_packet(linefi_packet_t * apstLineFiPkt)
 			u32Tmp |= apstLineFiPkt->pu8Data[2];
 #if 1
 			printf_fast_f("uart speed: %lu", u32Tmp);
+			set_linefi_uplink_speed(u32Tmp);
 #endif
 			printf_fast_f("(%x,%x,%x)\n\r", 
 					apstLineFiPkt->pu8Data[0] ,
@@ -774,11 +775,11 @@ void main (void)
 			if (SWITCH) { //눌렸을 때
 			}
 			else { //떨어질 때
-				InitialUART1_Timer3(230400);
+				InitialUART1_Timer3(115200);
 				//InitialUART1_Timer3(57600);
 				gu8UART = 0;
 				//printf_fast_f("uart speed: 230400:\n\r");
-				printf_fast_f("uart speed: 230400:\n\r");
+				printf_fast_f("uart speed: 115200:\n\r");
 #if 1
 				static uint8 su8Cnt = 0;
 				su8Cnt++;
@@ -811,6 +812,11 @@ void main (void)
 					break;
 				case ULTMODE_DATA:
 					putchar_manchester(gu8ULTestData);
+					break;
+				case ULTMODE_NO_MANCHESTER:
+					gu8UART = 1;
+					putchar(gu8ULTestData);
+					gu8UART = 0;
 					break;
 			}
 

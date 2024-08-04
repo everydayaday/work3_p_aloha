@@ -82,6 +82,11 @@ void InitialUART1_Timer3(UINT32 u32Baudrate) //use timer3 as Baudrate generator
 	set_TR3;         //Trigger Timer3
 }
 
+void set_linefi_uplink_speed(UINT32 u32Baudrate)
+{
+	return InitialUART1_Timer3(u32Baudrate);
+}
+
 /* Needed for printf */
 void putchar (char c) 
 {
@@ -376,7 +381,7 @@ void uart_setup()
 	   300, 600, 1200, 2400, 4800, 9600, 14400, 19200, 28800, 38400, 57600,  115200, 230400
 	 */
 	InitialUART0_Timer1(115200);
-	InitialUART1_Timer3(230400);
+	InitialUART1_Timer3(115200);
 
 	set_ES;
 	set_ES_1;

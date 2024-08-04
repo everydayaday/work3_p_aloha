@@ -106,7 +106,7 @@ UINT8 __xdata gpu8Data2[20] = {
 };
 
 #define LINEFI_DEFAULT_RATE	57600
-#define LINEFI_DEFAULT_RATE_IDX	5
+#define LINEFI_DEFAULT_RATE_IDX	4
 
 extern UINT8 gu8UART;
 uint16 __xdata gu16TimeCnt;
@@ -875,43 +875,22 @@ void main (void)
 						case UART0_INPUT_MODE5 : // 상향 시험용
 							switch(u8RxUART) {
 								case '0' : // 
-									stLineFiPkt.u8Type = Type_UpLinkTest;
 									make_linefi_payload(gpu32UartSpeed[u8LineFiSpeed], ULTMODE_INIT, 0, pu8Data);
-									stLineFiPkt.u8Size = 10;
-									stLineFiPkt.pu8Data = pu8Data;
-
-									send_linefi_packet(&stLineFiPkt);
-									print_linefipacket(&stLineFiPkt);
 									break;
-
 								case '1' : // 
-									stLineFiPkt.u8Type = Type_UpLinkTest;
 									make_linefi_payload(gpu32UartSpeed[u8LineFiSpeed], ULTMODE_PREAMBLE, 0, pu8Data);
-									stLineFiPkt.u8Size = 10;
-									stLineFiPkt.pu8Data = pu8Data;
-
-									send_linefi_packet(&stLineFiPkt);
-									print_linefipacket(&stLineFiPkt);
 									break;
-
 								case '2' : // 
-									stLineFiPkt.u8Type = Type_UpLinkTest;
 									make_linefi_payload(gpu32UartSpeed[u8LineFiSpeed], ULTMODE_DATA, 0, pu8Data);
-									stLineFiPkt.u8Size = 10;
-									stLineFiPkt.pu8Data = pu8Data;
-
-									send_linefi_packet(&stLineFiPkt);
-									print_linefipacket(&stLineFiPkt);
 									break;
-
 								case '3' : // 
-									stLineFiPkt.u8Type = Type_UpLinkTest;
 									make_linefi_payload(gpu32UartSpeed[u8LineFiSpeed], ULTMODE_DATA, 0xff, pu8Data);
-									stLineFiPkt.u8Size = 10;
-									stLineFiPkt.pu8Data = pu8Data;
-
-									send_linefi_packet(&stLineFiPkt);
-									print_linefipacket(&stLineFiPkt);
+									break;
+								case '4' : // 
+									make_linefi_payload(gpu32UartSpeed[u8LineFiSpeed], ULTMODE_NO_MANCHESTER, 0x0, pu8Data);
+									break;
+								case '5' : // 
+									make_linefi_payload(gpu32UartSpeed[u8LineFiSpeed], ULTMODE_NO_MANCHESTER, 0xff, pu8Data);
 									break;
 
 								case 'k' : // speed up
@@ -925,6 +904,23 @@ void main (void)
 										u8LineFiSpeed--;
 									}
 									printf_fast_f("uart speed: %lu:\n\r", gpu32UartSpeed[u8LineFiSpeed]);
+									break;
+							}
+							switch(u8RxUART) {
+								case '0' : // 
+								case '1' : // 
+								case '2' : // 
+								case '3' : // 
+								case '4' : // 
+								case '5' : // 
+									stLineFiPkt.u8Type = Type_UpLinkTest;
+									stLineFiPkt.u8Size = 10;
+									stLineFiPkt.pu8Data = pu8Data;
+
+									send_linefi_packet(&stLineFiPkt);
+									print_linefipacket(&stLineFiPkt);
+									InitialUART1_Timer3(gpu32UartSpeed[u8LineFiSpeed]);
+
 									break;
 							}
 							break;

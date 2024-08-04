@@ -8,6 +8,7 @@ void putchar (char c);
 void  InitialUART0_Timer1(UINT32 u32Baudrate); //T1M = 1, SMOD = 1
 void  InitialUART0_Timer3(UINT32 u32Baudrate); //Timer3 as Baudrate, SMOD=1, Prescale=0
 void  InitialUART1_Timer3(UINT32 u32Baudrate);
+void set_linefi_uplink_speed(UINT32 u32Tmp);
 
 void  Send_Data_To_UART0(UINT8 c);
 UINT8 Receive_Data_From_UART0(void);
@@ -40,6 +41,7 @@ void putchar (char c);
 void  InitialUART0_Timer1(UINT32 u32Baudrate); //T1M = 1, SMOD = 1
 void  InitialUART0_Timer3(UINT32 u32Baudrate); //Timer3 as Baudrate, SMOD=1, Prescale=0
 void  InitialUART1_Timer3(UINT32 u32Baudrate);
+void set_linefi_uplink_speed(UINT32 u32Tmp);
 
 void uart_setup();
 
