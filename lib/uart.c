@@ -330,7 +330,7 @@ void putchar_uart1(char c)
 #define UART1_TX_GAP 50 // 시작비트 - 정지비트 간격이 130마이크로초
 // 4개 연속 인터럽트로 보냈더니, 시작비트 - 정지비트 간격이 12마이크로초
 #define LINEFI_UPLINKE_TX_GAP 50 // 시작비트 - 정지비트 간격이 130마이크로초
-#define LINEFI_DOWNLINKE_TX_GAP 50 // 시작비트 - 정지비트 간격이 130마이크로초
+#define LINEFI_DOWNLINKE_TX_GAP 200 // 시작비트 - 정지비트 간격이 130마이크로초
 
 uint8_t __xdata pu8UartRx0Buf[UART0_RX_BUFF_SIZE] = {0};
 uint8_t __xdata pu8UartTx0Buf[UART0_TX_BUFF_SIZE] = {0};

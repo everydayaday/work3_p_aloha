@@ -53,6 +53,7 @@ XRAM_SIZE = --xram-size 768
 DFOSC = -DFOSC_166000
 #DUART = -D_USING_UART_POLLING_
 DUART = -D_USING_UART_ISR_
+DUART += -D_LINEFI_UPLINK_
 
 # ------------------------------------------------------
 # SDCC

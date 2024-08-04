@@ -95,6 +95,16 @@ uplink_mode_t __xdata gu8ULTestMode = ULTMODE_INIT;
 UINT8 __xdata gu8ULTestData = 0;
 UINT8 __xdata gu8RateIdx = 4;
 
+const char * __xdata  gppcULTestMode[] = {
+	"ULTMODE_INIT",
+	"ULTMODE_PREAMBLE",
+	"ULTMODE_DATA",
+	"ULTMODE_NO_MANCHESTER",
+	"ULTMODE_NONE"
+};
+
+
+
 UINT32 __xdata gpu32UartSpeed[] = {
 	2400, // 0
 	28800, // 1
@@ -562,6 +572,7 @@ void set_uplink_test_mode(uplink_mode_t au8Mode, UINT8 au8Data)
 
 	gu8ULTestMode = au8Mode;
 	gu8ULTestData = au8Data;
+	printf_fast_f("%s:%d\r\n",gppcULTestMode[au8Mode], au8Data);
 }
 
 void process_all_packet(linefi_packet_t * apstLineFiPkt)
