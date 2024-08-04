@@ -8,6 +8,11 @@
 
 //UINT8 __xdata gu8UART; 제대로 전환이 안됨
 UINT8 gu8UART;
+
+UINT8 gu8BNFCnt = 0;
+UINT8 gu8BFCnt = 0;
+UINT8 gu8BNECnt = 0;
+UINT8 gu8BECnt = 0;
 //----------------------------------------------------------------------------------
 // UART0 baud rate initial setting 
 //----------------------------------------------------------------------------------
@@ -312,6 +317,7 @@ void putchar_uart1(char c)
 #define UART0_TX_BUFF_SIZE 16
 #define UART1_RX_BUFF_SIZE 16
 #define UART1_TX_BUFF_SIZE 16
+#define UART1_TX_BUFF_SIZE_MSK 0x0F
 
 #define UART0_TX_GAP 100
 //#define UART1_TX_GAP 100
@@ -322,8 +328,8 @@ void putchar_uart1(char c)
 uint8_t __xdata pu8UartRx0Buf[UART0_RX_BUFF_SIZE] = {0};
 uint8_t __xdata pu8UartTx0Buf[UART0_TX_BUFF_SIZE] = {0};
 uint8_t __xdata pu8UartRx1Buf[UART1_RX_BUFF_SIZE] = {0};
-uint8_t pu8UartTx1Buf[UART1_TX_BUFF_SIZE] = {0};//  10마이크로초 인듯..
-//uint8_t __xdata pu8UartTx1Buf[UART1_TX_BUFF_SIZE] = {0};//  10마이크로초보다 큰 듯.. --> 비슷함..ㅠㅠ
+//uint8_t pu8UartTx1Buf[UART1_TX_BUFF_SIZE] = {0};//  10마이크로초 인듯..
+uint8_t __xdata pu8UartTx1Buf[UART1_TX_BUFF_SIZE] = {0};//  10마이크로초보다 큰 듯.. --> 비슷함..ㅠㅠ
 
 uint8_t __xdata gu8Rx0Size = 0;  // Rx0버퍼에 쌓여있는, 받은 데이타 크기
 uint8_t __xdata gu8Rx0RIdx = 0; // Rx0버퍼에서 읽기 인덱스, 이부문부터 쌓여진 데이타를 읽어서 처리
@@ -474,8 +480,10 @@ void Uart1Tx_ISR()
 	// tx1_idle기능을  gu8Tx1Size으로 대치
 	clr_TI_1;// clear, putchar_uart1()에서 직접 불린 상태면 gu8Tx1Size==1인데, 이 경우는 무의미 할 수도 있음, 
 	if (gu8Tx1Size == 0) {
+		//gu8BECnt++;
 		return;
 	}
+	//gu8BNECnt++;
 	// gu8Tx1Size > 1인 경우는 보내기버퍼에서 한 옥텟이 전송되고 인터럽트가 걸린 것.
 	// gu8Tx1Size == 1인 경우는 putchar_uart1()에서 직접 불린 경우일 수도 있음
 #if 0
@@ -486,9 +494,13 @@ void Uart1Tx_ISR()
 #endif
 	SBUF_1 = pu8UartTx1Buf[gu8Tx1RIdx++];
 	gu8Tx1Size--;
+#if 0
 	if (gu8Tx1RIdx == UART1_TX_BUFF_SIZE) {
 		gu8Tx1RIdx = 0;
 	}
+#endif
+	gu8Tx1RIdx &= UART1_TX_BUFF_SIZE_MSK;
+
 }
 
 void SerialPort1_ISR(void) interrupt(15) 
@@ -583,40 +595,52 @@ void putchar_uart0(char au8Data)
 void putchar_uart1(char au8Data)
 {
 	while (gu8Tx1Size >= UART1_TX_BUFF_SIZE) {
+		gu8BFCnt++;
 		// blocking until buffer available
 		// 전송 버퍼가 1개 빌 때까지 기다림
 		nop;
 	}
+	gu8BNFCnt++;
 
 	clr_ES_1;
 	pu8UartTx1Buf[gu8Tx1WIdx++] = au8Data;
 	gu8Tx1Size++;
+#if 0
 	if (gu8Tx1WIdx == UART1_TX_BUFF_SIZE) {
 		//링버퍼 구현
 		gu8Tx1WIdx = 0;
 	}
+#endif
+	gu8Tx1WIdx &= UART1_TX_BUFF_SIZE_MSK;
+
+#if 1
+	if (gu8Tx1Size == 1) {
+		gu8BECnt++;
+		// 비어있으면, 지금 넣어서 1이되었으면,  TX를 개시시켜 줘야 함
+		set_TI_1;
+	}
+	else {
+		gu8BNECnt++;
+	}
+#endif
+#if 0
 	pu8UartTx1Buf[gu8Tx1WIdx++] = au8Data;
 	gu8Tx1Size++;
-	if (gu8Tx1WIdx == UART1_TX_BUFF_SIZE) {
-		//링버퍼 구현
-		gu8Tx1WIdx = 0;
-	}
+	gu8Tx1WIdx &= UART1_TX_BUFF_SIZE_MSK;
+
 	pu8UartTx1Buf[gu8Tx1WIdx++] = au8Data;
 	gu8Tx1Size++;
-	if (gu8Tx1WIdx == UART1_TX_BUFF_SIZE) {
-		//링버퍼 구현
-		gu8Tx1WIdx = 0;
-	}
+	gu8Tx1WIdx &= UART1_TX_BUFF_SIZE_MSK;
+
 	pu8UartTx1Buf[gu8Tx1WIdx++] = au8Data;
 	gu8Tx1Size++;
-	if (gu8Tx1WIdx == UART1_TX_BUFF_SIZE) {
-		//링버퍼 구현
-		gu8Tx1WIdx = 0;
-	}
+	gu8Tx1WIdx &= UART1_TX_BUFF_SIZE_MSK;
+
 	if (gu8Tx1Size == 4) {
 		// 비어있으면, 지금 넣어서 1이되었으면,  TX를 개시시켜 줘야 함
 		set_TI_1;
 	}
+#endif
 	set_ES_1;
 }
 #endif

@@ -116,6 +116,10 @@ extern UINT8 gu8UART;
 UINT16 __xdata gu16TimeCnt = 0;
 UINT32 __xdata gu32TimeCnt = 0;
 
+extern UINT8 gu8BNFCnt; // buffer not full
+extern UINT8 gu8BFCnt; // buffer full
+extern UINT8 gu8BNECnt; // buffer not empty
+extern UINT8 gu8BECnt; // buffer empty
 UINT8 conv_nibble2manchester (UINT8 c)
 {
 	/*
@@ -751,6 +755,16 @@ void main (void)
 					printf_fast_f("no rx\r\n");
 					}
 					break;
+				case 'T' :
+					printf_fast_f("%d %d %d %d\r\n",gu8BFCnt, gu8BNFCnt, gu8BECnt, gu8BNECnt);
+					//printf_fast_f("%d %d\r\n",gu8BNECnt, gu8BECnt);
+					gu8BFCnt = 0;
+					gu8BNFCnt = 0;
+					gu8BECnt = 0;
+					gu8BNECnt = 0;
+					break;
+
+
 			}
 		} // if (get_uart0_char_nb(&u8RxUART))
 #endif
