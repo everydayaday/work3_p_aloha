@@ -6,6 +6,7 @@
 #include "Function_define.h"
 #include "uart.h"
 
+UINT8 __xdata gu8UART = 0;
 //----------------------------------------------------------------------------------
 // UART0 baud rate initial setting 
 //----------------------------------------------------------------------------------
@@ -73,6 +74,17 @@ void InitialUART1_Timer3(UINT32 u32Baudrate) //use timer3 as Baudrate generator
 	RL3    = LOBYTE(65536 - (1037500/u32Baudrate));				/*16.6 MHz */
 #endif
 	set_TR3;         //Trigger Timer3
+}
+
+/* Needed for printf */
+void putchar (char c) 
+{
+	if (gu8UART == 0)  {
+		putchar_uart0(c);
+	}
+	else {
+		putchar_uart1(c);
+	}
 }
 
 #ifdef _USING_UART_POLLING_

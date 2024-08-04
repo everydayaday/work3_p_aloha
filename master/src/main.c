@@ -108,6 +108,7 @@ UINT8 __xdata gpu8Data2[20] = {
 #define LINEFI_DEFAULT_RATE	57600
 #define LINEFI_DEFAULT_RATE_IDX	5
 
+extern UINT8 gu8UART;
 uint16 __xdata gu16TimeCnt;
 uint16 __xdata gu16TimeCntMilliSec;
 UINT32 __xdata gpu32UartSpeed[] = {
@@ -127,18 +128,7 @@ UINT32 __xdata gpu32UartSpeed[] = {
 	921600  // 13
 };
 
-UINT8 gu8UART = 0;
-
-/* Needed for printf */
-void putchar(char c) 
-{
-	if (gu8UART == 0)  {
-		putchar_uart0(c);
-	}
-	else {
-		putchar_uart1(c);
-	}
-}
+extern UINT8 gu8UART0;
 
 enum {
 	STATE_SELF,

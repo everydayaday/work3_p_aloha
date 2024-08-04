@@ -112,20 +112,9 @@ UINT32 __xdata gpu32UartSpeed[] = {
 };
 
 UINT16 __xdata gpu16RxTime[20];
-UINT8 __xdata gu8UART = 0;
+extern UINT8 gu8UART;
 UINT16 __xdata gu16TimeCnt = 0;
 UINT32 __xdata gu32TimeCnt = 0;
-
-/* Needed for printf */
-void putchar (char c) 
-{
-	if (gu8UART == 0)  {
-		putchar_uart0(c);
-	}
-	else {
-		putchar_uart1(c);
-	}
-}
 
 UINT8 conv_nibble2manchester (UINT8 c)
 {
@@ -805,14 +794,8 @@ void main (void)
 					break;
 				case ULTMODE_PREAMBLE:
 					preamble();
-					preamble();
-					preamble();
-					preamble();
 					break;
 				case ULTMODE_DATA:
-					putchar_manchester(gu8ULTestData);
-					putchar_manchester(gu8ULTestData);
-					putchar_manchester(gu8ULTestData);
 					putchar_manchester(gu8ULTestData);
 					break;
 			}

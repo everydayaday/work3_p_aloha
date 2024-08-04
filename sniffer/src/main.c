@@ -105,25 +105,10 @@ UINT32 __xdata gpu32UartSpeed[] = {
 	921600  // 13
 };
 
-UINT8 gu8UART = 0;
+extern UINT8 gu8UART;
 UINT16 gu16TimeCnt = 0;
 
 void InitialUART1_Timer3(UINT32);
-
-/* Needed for printf */
-void putchar (char c) 
-{
-	if (gu8UART == 0)  {
-		TI = 0;
-		SBUF = c;
-		while(TI==0);
-	}
-	else {
-		TI_1 = 0;
-		SBUF_1 = c;
-		while(TI_1==0);
-	}
-}
 
 UINT8 conv_nibble2manchester (UINT8 c)
 {

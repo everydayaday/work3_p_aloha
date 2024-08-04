@@ -3,6 +3,7 @@
 #define __UART_POLLING__
 
 #include "Common.h"
+void putchar (char c);
 
 void  InitialUART0_Timer1(UINT32 u32Baudrate); //T1M = 1, SMOD = 1
 void  InitialUART0_Timer3(UINT32 u32Baudrate); //Timer3 as Baudrate, SMOD=1, Prescale=0
@@ -34,6 +35,7 @@ uint8_t getchar_uart1(uint8_t * apu8Data);
 #include "Delay.h"
 #include "SFR_Macro.h"
 #include "Function_define.h"
+void putchar (char c);
 
 void  InitialUART0_Timer1(UINT32 u32Baudrate); //T1M = 1, SMOD = 1
 void  InitialUART0_Timer3(UINT32 u32Baudrate); //Timer3 as Baudrate, SMOD=1, Prescale=0
