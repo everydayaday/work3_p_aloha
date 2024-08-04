@@ -671,7 +671,7 @@ void main (void)
 	UINT8 __xdata u8OutputState = STATE_SELF;
 	UINT8 __xdata u8StateRxCSC = STATE_RxCSC_STOP;
 	UINT8 __xdata u8LineFiAddr = 1;
-	UINT8 __xdata u8LineFiSpeed = 1;
+	UINT8 __xdata u8LineFiSpeed = 4;
 	UINT8 __xdata u8LineFiCmd = 1;
 	UINT8 __xdata u8PwrOnFirstFlag = 1;
 	UINT8 __xdata u8SwNum;
@@ -1196,6 +1196,13 @@ void main (void)
 							print_linefipacket(&stLineFiPkt);
 							break;
 						case (1<<0) : // up SW5
+							stLineFiPkt.u8Type = Type_CtrlMotor;
+							make_linefi_payload(gpu32UartSpeed[u8LineFiSpeed], ULTMODE_DATA, 0xff, pu8Data);
+							stLineFiPkt.u8Size = 10;
+							stLineFiPkt.pu8Data = pu8Data;
+
+							send_linefi_packet(&stLineFiPkt);
+							print_linefipacket(&stLineFiPkt);
 							break;
 					}
 #endif

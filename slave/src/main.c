@@ -90,6 +90,12 @@ uint8 gu8MyAddr;
 
 UINT8 __xdata gpu8Data[20];
 UINT8 __xdata gu8MotorState = 0;
+enum {
+	STATE_MOTOR_STOP1,
+	STATE_MOTOR_CW,
+	STATE_MOTOR_STOP2,
+	STATE_MOTOR_CCW
+};
 
 uplink_mode_t __xdata gu8ULTestMode = ULTMODE_INIT;
 UINT8 __xdata gu8ULTestData = 0;
@@ -589,6 +595,30 @@ void process_all_packet(linefi_packet_t * apstLineFiPkt)
 		case Type_Bcast :
 			break;
 		case Type_Mcast :
+			break;
+		case Type_CtrlMotor :
+			switch(gu8MotorState) {
+				case STATE_MOTOR_STOP1 :
+					MOTOR_CCW = 0;
+					MOTOR_CW = 0 ;
+					gu8MotorState = STATE_MOTOR_CW;
+					break;
+				case STATE_MOTOR_CW :
+					MOTOR_CCW = 0;
+					MOTOR_CW = 1 ;
+					gu8MotorState = STATE_MOTOR_STOP2;
+					break;
+				case STATE_MOTOR_STOP2 :
+					MOTOR_CCW = 1;
+					MOTOR_CW = 1 ;
+					gu8MotorState = STATE_MOTOR_CCW;
+					break;
+				case STATE_MOTOR_CCW :
+					MOTOR_CCW = 1;
+					MOTOR_CW = 0 ;
+					gu8MotorState = STATE_MOTOR_STOP1;
+					break;
+			}
 			break;
 		case Type_UpLinkTest :
 //			InitialUART1_Timer3(
