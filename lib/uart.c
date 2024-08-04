@@ -322,7 +322,8 @@ void putchar_uart1(char c)
 uint8_t __xdata pu8UartRx0Buf[UART0_RX_BUFF_SIZE] = {0};
 uint8_t __xdata pu8UartTx0Buf[UART0_TX_BUFF_SIZE] = {0};
 uint8_t __xdata pu8UartRx1Buf[UART1_RX_BUFF_SIZE] = {0};
-uint8_t __xdata pu8UartTx1Buf[UART1_TX_BUFF_SIZE] = {0};
+uint8_t pu8UartTx1Buf[UART1_TX_BUFF_SIZE] = {0};//  10마이크로초 인듯..
+//uint8_t __xdata pu8UartTx1Buf[UART1_TX_BUFF_SIZE] = {0};//  10마이크로초보다 큰 듯.. --> 비슷함..ㅠㅠ
 
 uint8_t __xdata gu8Rx0Size = 0;  // Rx0버퍼에 쌓여있는, 받은 데이타 크기
 uint8_t __xdata gu8Rx0RIdx = 0; // Rx0버퍼에서 읽기 인덱스, 이부문부터 쌓여진 데이타를 읽어서 처리
