@@ -1,4 +1,4 @@
-#ifndef _USING_UART_ISR_
+#ifdef _USING_UART_POLLING_
 #ifndef __UART_POLLING__
 #define __UART_POLLING__
 
@@ -22,7 +22,9 @@ uint8_t getchar_uart0(uint8_t * apu8Data);
 uint8_t getchar_uart1(uint8_t * apu8Data);
 
 #endif
-#else
+#endif
+
+#ifdef _USING_UART_ISR_
 
 #ifndef __UART_ISR__
 #define __UART_ISR__

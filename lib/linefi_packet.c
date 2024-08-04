@@ -9,9 +9,7 @@
 //
 //***********************************************************************************************************
 
-//#define _USING_UART_ISR_
 #include "linefi_packet.h"
-//#include "uart.h"
 #include "uart.h"
 
 uint16 gu16Cnt = 0;

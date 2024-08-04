@@ -20,7 +20,6 @@
 #include "SFR_Macro.h"
 #include "Function_define.h"
 
-//#define _USING_UART_ISR_
 #include "uart.h"
 #include "linefi_packet.h"
 

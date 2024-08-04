@@ -51,6 +51,8 @@ XRAM_SIZE = --xram-size 768
 # N76 Clock Frequency (-DFOSC_160000, -DFOSC_166000)
 #DFOSC = -DFOSC_160000
 DFOSC = -DFOSC_166000
+DUART = -D_USING_UART_POLLING_
+#DUART = -D_USING_UART_ISR_
 
 # ------------------------------------------------------
 # SDCC
@@ -65,9 +67,9 @@ MCU_MODEL = mcs51
 
 #DEBUG = --debug
 AFLAGS =  -l -s 
-CFLAGS = -I$(INCDIR) -m$(MCU_MODEL) --model-$(MODEL) --out-fmt-ihx --no-xinit-opt $(DEBUG) $(DFOSC) --peep-file tools/peep.def
-LFLAGS = $(LIBPATH) $(LIBS) -m$(MCU_MODEL) --model-$(MODEL) $(CODE_SIZE) $(IRAM_SIZE) $(XRAM_SIZE) --out-fmt-ihx $(DEBUG) $(DFOSC)
-
+CFLAGS = -I$(INCDIR) -m$(MCU_MODEL) --model-$(MODEL) --out-fmt-ihx --no-xinit-opt $(DEBUG) $(DFOSC) $(DUART) --peep-file tools/peep.def
+LFLAGS = $(LIBPATH) $(LIBS) -m$(MCU_MODEL) --model-$(MODEL) $(CODE_SIZE) $(IRAM_SIZE) $(XRAM_SIZE) --out-fmt-ihx $(DEBUG) $(DFOSC) $(DUART)
+ 
 # ------------------------------------------------------
 # S = @
 

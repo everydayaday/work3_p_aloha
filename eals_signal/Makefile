@@ -9,11 +9,10 @@ SRCDIR  = ./src
 OBJDIR  = ./obj
 HEXDIR  = ./hex
 LIBDIR  = ../lib
-INCDIR2  = /usr/share/sdcc/include
 
 # ------------------------------------------------------
 # Target and Source
-TARGET = $(HEXDIR)/test
+TARGET = $(HEXDIR)/eals_signal
 
 #C_SRC = $(SRCDIR)/helloworld.c
 C_SRC := $(wildcard $(SRCDIR)/*.c $(LIBDIR)/*.c)
@@ -35,22 +34,25 @@ OBJ = $(addprefix $(OBJDIR)/, $(C_OBJ_FILE)) $(addprefix $(OBJDIR)/, $(ASM_OBJ_F
 # variables as "xdata", or switch to larger model
 
 # Memory Model (small, medium, large, huge)
-MODEL  = medium
+MODEL  = small
 # ------------------------------------------------------
 # Memory Layout
 # PRG Size = 4K Bytes
 #CODE_SIZE = --code-loc 0x0000 --code-size 18432
-#CODE_SIZE = --code-size 18432
-
+CODE_SIZE = --code-size 18432
 # INT-MEM Size = 256 Bytes
 #IRAM_SIZE = --idata-loc 0x0000  --iram-size 256
-IRAM_SIZE = --iram-size 0x0100
+IRAM_SIZE = --iram-size 256
 # EXT-MEM Size = 4K Bytes
-XRAM_SIZE = --xram-loc 0x0000 --xram-size 0x2000
-#XRAM_SIZE = --xram-size 768
+#XRAM_SIZE = --xram-loc 0x0000 --xram-size 768
+XRAM_SIZE = --xram-size 768
 
 # See Datasheet section 13.5 for 16.6MHz HIRC mode
 # N76 Clock Frequency (-DFOSC_160000, -DFOSC_166000)
+#DFOSC = -DFOSC_160000
+DFOSC = -DFOSC_166000
+#DUART = -D_USING_UART_POLLING_
+DUART = -D_USING_UART_ISR_
 
 # ------------------------------------------------------
 # SDCC
@@ -58,16 +60,16 @@ XRAM_SIZE = --xram-loc 0x0000 --xram-size 0x2000
 CC = sdcc
 AS = sdas8051
 
+MCU_MODEL = mcs51
 
 #LIBS    = 
 #LIBPATH = -L $(LIBDIR)
 
 #DEBUG = --debug
-CFLAGS2 = -DUART1 -D__SDCC__ -DHAL_DMA
-AFLAGS = -glos -p
-CFLAGS = --model-$(MODEL) $(XRAM_SIZE) $(IRAM_SIZE) -I$(INCDIR2) -I$(INCDIR) $(DEBUG) $(CFLAGS2)
-LFLAGS = $(LIBPATH) $(LIBS) --model-$(MODEL) $(CODE_SIZE) --out-fmt-ihx $(DEBUG) $(DFOSC)
-
+AFLAGS =  -l -s 
+CFLAGS = -I$(INCDIR) -m$(MCU_MODEL) --model-$(MODEL) --out-fmt-ihx --no-xinit-opt $(DEBUG) $(DFOSC) $(DUART) --peep-file tools/peep.def
+LFLAGS = $(LIBPATH) $(LIBS) -m$(MCU_MODEL) --model-$(MODEL) $(CODE_SIZE) $(IRAM_SIZE) $(XRAM_SIZE) --out-fmt-ihx $(DEBUG) $(DFOSC) $(DUART)
+ 
 # ------------------------------------------------------
 # S = @
 

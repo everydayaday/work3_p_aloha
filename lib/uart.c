@@ -1,8 +1,3 @@
-#define _USING_UART_ISR_
-
-//#define FOSC_160000
-#define FOSC_166000
-
 #include "Common.h"
 #include "N76E003.h"
 #include "Common.h"
@@ -80,7 +75,7 @@ void InitialUART1_Timer3(UINT32 u32Baudrate) //use timer3 as Baudrate generator
 	set_TR3;         //Trigger Timer3
 }
 
-#ifndef _USING_UART_ISR_
+#ifdef _USING_UART_POLLING_
 /*---------------------------------------------------------------------------------------------------------*/
 /*                                                                                                         */
 /* Copyright(c) 2016 Nuvoton Technology Corp. All rights reserved.                                         */
@@ -101,7 +96,7 @@ void InitialUART1_Timer3(UINT32 u32Baudrate) //use timer3 as Baudrate generator
 #include "Function_define.h"
 #include "uart.h"
 
-UINT8 Receive_Data_From_UART0(void)
+UINT8 getchar_uart0_b(void)
 {
 	UINT8 c;
 
@@ -110,17 +105,6 @@ UINT8 Receive_Data_From_UART0(void)
 	RI = 0;
 	return (c);
 }
-
-UINT8 Receive_Data_From_UART0_nb(UINT8 * apu8Tmp)
-{
-	if (RI) {
-		*apu8Tmp = SBUF;
-		RI = 0;
-		return 1;
-	}
-	return 0;
-}
-
 
 UINT8 getchar_uart0(UINT8 * apu8Tmp)
 {
@@ -214,21 +198,6 @@ bit riflag;
  * FUNCTION_INPUTS: P0.7(RXD) serial input
  * FUNCTION_OUTPUTS: P0.6(TXD) serial output
  */
-void SerialPort0_ISR(void) interrupt 4
-{
-	if (RI==1)
-	{                                       /* if reception occur */
-		clr_RI;                             /* clear reception flag for next reception */
-		UART_BUFFER[u16CNT] = SBUF;
-		u16CNT ++;
-		riflag =1;
-	}
-	if(TI==1)
-	{
-		clr_TI;                             /* if emission occur */
-	}
-}
-
 
 #endif
 #if 0
@@ -288,23 +257,7 @@ bit riflag;
 //}
 #endif
 
-void SerialPort1_ISR(void) interrupt 15
-{
-	if (RI_1==1)
-	{                                       /* if reception occur */
-		clr_RI_1;                             /* clear reception flag for next reception */
-		UART_BUFFER[u16CNT] = SBUF_1;
-		u16CNT ++;
-		riflag =1;
-	}
-	if(TI_1==1)
-	{
-		clr_TI_1;                             /* if emission occur */
-	}
-}
-
 #endif
-#if 1
 
 /*
  * N76E003 UART echo with interrupt.
@@ -319,38 +272,8 @@ void SerialPort1_ISR(void) interrupt 15
 #include "SFR_Macro.h"
 #include "Function_define.h"
 
-#define UART_INDEX		(1)
 #define UART_BAUDRATE	(115200)
 
-uint8_t uart_data;
-bit_t uart_ri_flag;
-
-#if UART_INDEX
-void SerialPort1_ISR(void) __interrupt 15
-{
-	if (RI_1) {					// uart rx done
-		clr_RI_1;				// clear rx flag
-		uart_data = SBUF_1;
-		uart_ri_flag = 1;
-	}
-	if(TI_1) {					// uart tx done
-		clr_TI_1;				// clear tx flag
-	}
-}
-#else
-void SerialPort0_ISR(void) __interrupt 4
-{
-	if (RI) {					// uart rx done
-		clr_RI;					// clear rx flag
-		uart_data = SBUF;
-		uart_ri_flag = 1;
-	}
-	if(TI) {					// uart tx done
-		clr_TI;					// clear tx flag
-	}
-}
-#endif
-#endif
 void putchar_uart0(char c) 
 {
 	TI = 0;
@@ -364,7 +287,9 @@ void putchar_uart1(char c)
 	SBUF_1 = c;
 	while(TI_1==0);
 }
-#else
+#endif
+
+#ifdef _USING_UART_ISR_
 //#define TRUE 1
 //#define FALSE 0
 /*

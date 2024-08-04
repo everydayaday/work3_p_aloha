@@ -15,8 +15,6 @@
 //  File Function: N76E003 Timer0/1 Mode1 demo code
 //***********************************************************************************************************
 
-#define _USING_UART_ISR_
-
 #include "N76E003.h"
 #include "Common.h"
 #include "Delay.h"
