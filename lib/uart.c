@@ -572,12 +572,17 @@ void putchar_uart1(char au8Data)
 		nop;
 	}
 
+	clr_ES_1;
 	pu8UartTx1Buf[gu8Tx1WIdx++] = au8Data;
 	gu8Tx1Size++;
 	if (gu8Tx1WIdx == UART1_TX_BUFF_SIZE) {
 		//링버퍼 구현
 		gu8Tx1WIdx = 0;
 	}
-	set_TI_1;
+	if (gu8Tx1Size == 1) {
+		// 비어있으면, 지금 넣어서 1이되었으면,  TX를 개시시켜 줘야 함
+			set_TI_1;
+	}
+	set_ES_1;
 }
 #endif
