@@ -324,6 +324,8 @@ void putchar_uart1(char c)
 //#define UART1_TX_GAP 100 // 시작비트 - 정지비트 간격이 200마이크로초
 #define UART1_TX_GAP 50 // 시작비트 - 정지비트 간격이 130마이크로초
 // 4개 연속 인터럽트로 보냈더니, 시작비트 - 정지비트 간격이 12마이크로초
+#define LINEFI_UPLINKE_TX_GAP 50 // 시작비트 - 정지비트 간격이 130마이크로초
+#define LINEFI_DOWNLINKE_TX_GAP 50 // 시작비트 - 정지비트 간격이 130마이크로초
 
 uint8_t __xdata pu8UartRx0Buf[UART0_RX_BUFF_SIZE] = {0};
 uint8_t __xdata pu8UartTx0Buf[UART0_TX_BUFF_SIZE] = {0};
@@ -486,12 +488,21 @@ void Uart1Tx_ISR()
 	//gu8BNECnt++;
 	// gu8Tx1Size > 1인 경우는 보내기버퍼에서 한 옥텟이 전송되고 인터럽트가 걸린 것.
 	// gu8Tx1Size == 1인 경우는 putchar_uart1()에서 직접 불린 경우일 수도 있음
-#if 0
+#ifdef _LINEFI_DOWNLINK_
 	int i;
-	for (i = 0; i< UART1_TX_GAP;i++) {
+	for (i = 0; i< LINEFI_DOWNLINKE_TX_GAP;i++) {
 		nop; nop; nop; nop;
 	}
 #endif
+#ifdef _LINEFI_UPLINK_
+#if 0
+	int i;
+	for (i = 0; i< LINEFI_UPLINKE_TX_GAP;i++) {
+		nop; nop; nop; nop;
+	}
+#endif
+#endif
+
 	SBUF_1 = pu8UartTx1Buf[gu8Tx1RIdx++];
 	gu8Tx1Size--;
 #if 0
