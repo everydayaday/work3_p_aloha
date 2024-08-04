@@ -6,6 +6,7 @@
 #include "Function_define.h"
 #include "uart.h"
 
+//UINT8 __xdata gu8UART; 제대로 전환이 안됨
 UINT8 gu8UART;
 //----------------------------------------------------------------------------------
 // UART0 baud rate initial setting 
