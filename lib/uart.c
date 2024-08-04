@@ -410,7 +410,20 @@ void Uart0Tx_ISR()
 		gu8Tx0RIdx = 0;
 	}
 }
-
+#if 0
+void SerialPort0_ISR(void) interrupt(4) 
+{
+	if (RI == 1) {
+		clr_RI;
+		SBUF = SBUF;
+//		SBUF = '1';
+	}
+	if (TI == 1) {
+		clr_TI;
+	}
+}
+#endif
+#if 1
 void SerialPort0_ISR(void) interrupt(4) 
 {
 	if (RI == 1) {  /* if reception occur */
@@ -433,6 +446,7 @@ void SerialPort0_ISR(void) interrupt(4)
 		Uart0Tx_ISR();
 	}
 }
+#endif
 
 uint8_t chkchar_uart0()
 {

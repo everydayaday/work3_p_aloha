@@ -75,6 +75,7 @@ typedef enum {
 	UART0_INPUT_MODE3,
 	UART0_INPUT_MODE4,
 	UART0_INPUT_MODE5,
+	UART0_INPUT_MODE6,
 	MAX_STATE_UART0_INPUT
 
 } uart0_input_mode_t;
@@ -85,7 +86,8 @@ const char * __xdata  gcUartInputMode[MAX_STATE_UART0_INPUT] = {
 	"UART0_INPUT_MODE2:mimic 5keys on board",
 	"UART0_INPUT_MODE3:data setting",
 	"UART0_INPUT_MODE4:periodic function",
-	"UART0_INPUT_MODE5:uplink test"
+	"UART0_INPUT_MODE5:uplink test",
+	"UART0_INPUT_MODE6:loopback test"
 };
 
 
@@ -755,6 +757,7 @@ void main (void)
 #if 0 // uart0를 받아서 uart1으로 전달
 #else // CLI
 		if (getchar_uart0(&u8RxUART)) { // 유아트 입력이 있을 때
+#if 1
 			switch(u8RxUART) {
 				case KEY_ESC :
 					u8StateUart0InputMode++;
@@ -924,9 +927,13 @@ void main (void)
 									break;
 							}
 							break;
+						case UART0_INPUT_MODE6 : // 루프백 확인
+							printf_fast_f("%c", u8RxUART);
+							break;
 					} //switch(u8StateUart0InputMode)
 					break;
 			} //switch(u8RxUART)
+#endif
 		} //if (getchar_uart0(&u8RxUART))
 		else { // 유아트 입력이 없을 떄, 백그라운드로 실행
 			switch(u8StateUart0InputMode) {
