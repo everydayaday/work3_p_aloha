@@ -93,6 +93,7 @@ UINT8 __xdata gu8MotorState = 0;
 
 uplink_mode_t __xdata gu8ULTestMode = ULTMODE_INIT;
 UINT8 __xdata gu8ULTestData = 0;
+UINT8 __xdata gu8RateIdx = 4;
 
 UINT32 __xdata gpu32UartSpeed[] = {
 	2400, // 0
@@ -764,8 +765,20 @@ void main (void)
 					gu8BECnt = 0;
 					gu8BNECnt = 0;
 					break;
-
-
+				case 'k' : // speed up
+					gu8RateIdx++;
+					printf_fast_f("%lu\r\n", gpu32UartSpeed[gu8RateIdx]);
+					break;
+				case 'j' : // speed down
+					gu8RateIdx--;
+					printf_fast_f("%lu\r\n", gpu32UartSpeed[gu8RateIdx]);
+					break;
+				case 's' : // speed setting
+					InitialUART1_Timer3(gpu32UartSpeed[gu8RateIdx]);
+					break;
+				case 'p' :
+					gu8ULTestMode = ULTMODE_DATA;
+					break;
 			}
 		} // if (get_uart0_char_nb(&u8RxUART))
 #endif
@@ -775,11 +788,12 @@ void main (void)
 			if (SWITCH) { //눌렸을 때
 			}
 			else { //떨어질 때
-				InitialUART1_Timer3(115200);
-				//InitialUART1_Timer3(57600);
+				//InitialUART1_Timer3(115200);
+				InitialUART1_Timer3(57600);
 				gu8UART = 0;
 				//printf_fast_f("uart speed: 230400:\n\r");
-				printf_fast_f("uart speed: 115200:\n\r");
+				//printf_fast_f("uart speed: 115200:\n\r");
+				printf_fast_f("uart speed: 57600:\n\r");
 #if 1
 				static uint8 su8Cnt = 0;
 				su8Cnt++;
@@ -850,6 +864,7 @@ void main (void)
 
 			case STATE_RxPKT_END :
 			printf_fast_f("\r\nRx SIZE:%d\n\r", u8RxLFPLen);
+			printf_fast_f("downlink timeout:%d\n\r", gu16TimeCnt);
 			if (u8RxLFPLen == 1) {
 				// 1 옥텟 수신, 초기 라인파이 임시 프로토콜
 				if (chk_my_addr(MY_ADDR, pu8RxUART[0])) {
