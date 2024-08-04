@@ -302,7 +302,8 @@ void putchar_uart1(char c)
 
 #define UART0_TX_GAP 100
 //#define UART1_TX_GAP 100
-#define UART1_TX_GAP 1
+//#define UART1_TX_GAP 100 // 시작비트 - 정지비트 간격이 200마이크로초
+#define UART1_TX_GAP 50 // 시작비트 - 정지비트 간격이 130마이크로초
 
 uint8_t __xdata pu8UartRx0Buf[UART0_RX_BUFF_SIZE] = {0};
 uint8_t __xdata pu8UartTx0Buf[UART0_TX_BUFF_SIZE] = {0};
@@ -462,7 +463,7 @@ void Uart1Tx_ISR()
 	}
 	// gu8Tx1Size > 1인 경우는 보내기버퍼에서 한 옥텟이 전송되고 인터럽트가 걸린 것.
 	// gu8Tx1Size == 1인 경우는 putchar_uart1()에서 직접 불린 경우일 수도 있음
-#if 0
+#if 1
 	int i;
 	for (i = 0; i< UART1_TX_GAP;i++) {
 		nop; nop; nop; nop;
@@ -581,7 +582,7 @@ void putchar_uart1(char au8Data)
 	}
 	if (gu8Tx1Size == 1) {
 		// 비어있으면, 지금 넣어서 1이되었으면,  TX를 개시시켜 줘야 함
-			set_TI_1;
+		set_TI_1;
 	}
 	set_ES_1;
 }
