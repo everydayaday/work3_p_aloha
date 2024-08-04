@@ -112,9 +112,9 @@ UINT32 __xdata gpu32UartSpeed[] = {
 };
 
 UINT16 __xdata gpu16RxTime[20];
-UINT8 gu8UART = 0;
-UINT16 gu16TimeCnt = 0;
-UINT32 gu32TimeCnt = 0;
+UINT8 __xdata gu8UART = 0;
+UINT16 __xdata gu16TimeCnt = 0;
+UINT32 __xdata gu32TimeCnt = 0;
 
 /* Needed for printf */
 void putchar (char c) 
@@ -167,7 +167,6 @@ void preamble()
 	gu8UART = 1;
 	return;
 }
-
 
 enum {
 	STATE_SELF,
@@ -777,7 +776,6 @@ void main (void)
 				gu8UART = 0;
 				//printf_fast_f("uart speed: 230400:\n\r");
 				printf_fast_f("uart speed: 230400:\n\r");
-
 #if 1
 				static uint8 su8Cnt = 0;
 				su8Cnt++;
@@ -789,7 +787,6 @@ void main (void)
 				MOTOR_CW = (su8Cnt>>1)&1;
 				MOTOR_CCW = (su8Cnt>>2)&1;
 #endif
-
 			}
 			u8PrevSwitch = SWITCH;
 		} //if (u8PrevSwitch != SWITCH)
@@ -849,51 +846,47 @@ void main (void)
 			break;
 
 			case STATE_RxPKT_END :
-			printf_fast_f("Rx SIZE:%d\n\r", u8RxLFPLen);
-			switch(u8RxLFPLen) {
-				case 1 : // 1 옥텟 수신, 초기 라인파이 임시 프로토콜
-					if (chk_my_addr(MY_ADDR, pu8RxUART[0])) {
-						//				rot_motor(u8RxUART);
-						printf_fast_f("Rx:%d\n\r", pu8RxUART[0]);
-						ctrl_rgbled_motor(u8RxUART);
-					}
-					break;
-				default : // 가변 옥텟(8  이상) 길이의  라이인파이 패킷 수신
-					if ( u8RxLFPLen < 8) { // 
-						UINT8 i;
-						printf_fast_f("1:Rx size:%d\n\r", u8RxLFPLen);
-						for (i=0; i<u8RxLFPLen;i++) {
-							printf_fast_f("0x%x ", pu8RxUART[i]);
-						}
-						printf_fast_f("\n\r");
-						for (i=0; i<u8RxLFPLen;i++) {
-							printf_fast_f("%d  ", gpu16RxTime[i]);
-						}
-						printf_fast_f("\n\r");
-					}
-					else {
-						UINT8 i;
-						printf_fast_f("2:Rx size:%d\n\r", u8RxLFPLen);
-						for (i=0; i<u8RxLFPLen;i++) {
-							printf_fast_f("0x%x ", pu8RxUART[i]);
-						}
-						printf_fast_f("\n\r");
-						for (i=0; i<u8RxLFPLen;i++) {
-							printf_fast_f("%d  ", gpu16RxTime[i]);
-						}
-						printf_fast_f("\n\r");
+			printf_fast_f("\r\nRx SIZE:%d\n\r", u8RxLFPLen);
+			if (u8RxLFPLen == 1) {
+				// 1 옥텟 수신, 초기 라인파이 임시 프로토콜
+				if (chk_my_addr(MY_ADDR, pu8RxUART[0])) {
+					//				rot_motor(u8RxUART);
+					printf_fast_f("Rx:%d\n\r", pu8RxUART[0]);
+					ctrl_rgbled_motor(u8RxUART);
+				}
+			}
+			else if(u8RxLFPLen < 8) {
+				// 7 옥텟 이하 수신, 초기 라인파이 임시 프로토콜
+				UINT8 i;
+				printf_fast_f("1:Rx size:%d\n\r", u8RxLFPLen);
+				for (i=0; i<u8RxLFPLen;i++) {
+					printf_fast_f("0x%x ", pu8RxUART[i]);
+				}
+				printf_fast_f("\n\r");
+				for (i=0; i<u8RxLFPLen;i++) {
+					printf_fast_f("%d  ", gpu16RxTime[i]);
+				}
+				printf_fast_f("\n\r");
+			}
+			else {
+				UINT8 i;
+				printf_fast_f("2:Rx size:%d\n\r", u8RxLFPLen);
+				for (i=0; i<u8RxLFPLen;i++) {
+					printf_fast_f("0x%x ", pu8RxUART[i]);
+				}
+				printf_fast_f("\n\r");
+				for (i=0; i<u8RxLFPLen;i++) {
+					printf_fast_f("%d  ", gpu16RxTime[i]);
+				}
+				printf_fast_f("\n\r");
 
-						cp_buf2linefipacket(u8RxLFPLen, pu8RxUART, &stLineFiPkt);
-						print_linefipacket(&stLineFiPkt);
-						process_all_packet(&stLineFiPkt);
-						if (gu8MyAddr == stLineFiPkt.u8Addr) {
-							process_my_packet(&stLineFiPkt);
-						}
-					}
-
-
-					break;
-			} //switch(u8RxLFPLen)
+				cp_buf2linefipacket(u8RxLFPLen, pu8RxUART, &stLineFiPkt);
+				print_linefipacket(&stLineFiPkt);
+				process_all_packet(&stLineFiPkt);
+				if (gu8MyAddr == stLineFiPkt.u8Addr) {
+					process_my_packet(&stLineFiPkt);
+				}
+			}
 			u8StateRxPkt = STATE_RxPKT_INIT;
 			break;
 		} //switch(u8StateRxPkt)

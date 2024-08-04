@@ -462,7 +462,7 @@ void Uart1Tx_ISR()
 	}
 	// gu8Tx1Size > 1인 경우는 보내기버퍼에서 한 옥텟이 전송되고 인터럽트가 걸린 것.
 	// gu8Tx1Size == 1인 경우는 putchar_uart1()에서 직접 불린 경우일 수도 있음
-#if 1
+#if 0
 	int i;
 	for (i = 0; i< UART1_TX_GAP;i++) {
 		nop; nop; nop; nop;

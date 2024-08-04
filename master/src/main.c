@@ -967,7 +967,7 @@ void main (void)
 
 #if 1 // 5개 스위치 입력 처리 부분
 		if (u8PwrOnFirstFlag) { // 전원 켜진 후, 한 번만 동작
-			switch (state_switches((SW_U<<0)| (SW_R<<1)| (SW_L<<2)| (SW_D<<3) | (SW_C<<4), &u8SwNum)) {
+			switch (state_switches((SW_U<<0)| (SW_R<<1)| (SW_L<<2)| (SW_D<<3)| (SW_C<<4), &u8SwNum)) {
 				case SW_ON :
 					switch(u8PwrOnFirstFlag) {
 						case 1 :
