@@ -329,7 +329,7 @@ void putchar_uart1(char c)
 //#define UART1_TX_GAP 100 // 시작비트 - 정지비트 간격이 200마이크로초
 #define UART1_TX_GAP 50 // 시작비트 - 정지비트 간격이 130마이크로초
 // 4개 연속 인터럽트로 보냈더니, 시작비트 - 정지비트 간격이 12마이크로초
-#define LINEFI_UPLINKE_TX_GAP 50 // 시작비트 - 정지비트 간격이 130마이크로초
+#define LINEFI_UPLINKE_TX_GAP 200 // 시작비트 - 정지비트 간격이 130마이크로초
 #define LINEFI_DOWNLINKE_TX_GAP 200 // 시작비트 - 정지비트 간격이 130마이크로초
 
 uint8_t __xdata pu8UartRx0Buf[UART0_RX_BUFF_SIZE] = {0};
@@ -500,7 +500,7 @@ void Uart1Tx_ISR()
 	}
 #endif
 #ifdef _LINEFI_UPLINK_
-#if 0
+#if 1
 	int i;
 	for (i = 0; i< LINEFI_UPLINKE_TX_GAP;i++) {
 		nop; nop; nop; nop;
@@ -628,6 +628,10 @@ void putchar_uart1(char au8Data)
 	}
 #endif
 	gu8Tx1WIdx &= UART1_TX_BUFF_SIZE_MSK;
+
+//	pu8UartTx1Buf[gu8Tx1WIdx++] = au8Data;
+//	gu8Tx1Size++;
+//	gu8Tx1WIdx &= UART1_TX_BUFF_SIZE_MSK;
 
 #if 1
 	if (gu8Tx1Size == 1) {
