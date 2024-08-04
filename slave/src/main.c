@@ -473,146 +473,7 @@ enum {
 	STATE_SW_DUAL_OFF,
 	STATE_SW_END
 };
-#if 1
-UINT8 state_switches(UINT8 au8SW, UINT8 *apu8SwNum)
-{
-	static UINT8 su8PrevSW = 0;
-	UINT8 i;
-	//UINT8 u8Cnt = 0;
-	UINT8 u8Result = SW_NONE;
-	if (su8PrevSW == au8SW) {
-		*apu8SwNum = 0;
-		return SW_NONE;
-	}
 
-//	printf_fast_f("su8PrevSW 0x%x\n\r",su8PrevSW);
-//	if (su8PrevSW != 0xF) {
-//		u8Cnt = 1;
-//	}
-
-	*apu8SwNum = 0;
-
-	for (i=0;i<5;i++) {
-		switch((su8PrevSW>>i)&1) {
-			case SW_ON :
-				switch((au8SW>>i)&1) {
-					case SW_ON :
-						break;
-					case SW_OFF :
-						su8PrevSW = au8SW;
-						*apu8SwNum |= 1<<i;
-						u8Result = SW_OFF;
-					//	printf_fast_f("sw%d off\n\r",i+1);
-						break;
-				}
-				break;
-			case SW_OFF :
-				switch((au8SW>>i)&1) {
-					case SW_ON :
-						su8PrevSW = au8SW;
-						*apu8SwNum |= 1<<i;
-						u8Result = SW_ON;
-						//u8Cnt++;
-					//	printf_fast_f("sw%d on\n\r",i+1);
-						break;
-					case SW_OFF :
-						break;
-				}
-				break;
-		}
-	}
-				//		printf_fast_f("result %d \n\r",u8Result);
-
-	return u8Result;
-#if 0
-	su8Cnt++;
-	UINT8 u8Result;
-	UINT8 u8PrevSW = su8State;
-	if (au8SW != u8PrevSW) {
-		UINT8 i;
-		for (i=0;i<4;i++) {
-			if (((au8SW>>i)&1) != ((u8PrevSW>>i)&1))  {
-				if ((au8SW>>i)&1) {
-					// SWi on
-				}
-				else {
-					// SWi off
-				}
-				break;
-			}
-		}
-
-		if (((au8SW>>3)&1) != ((u8PrevSW>>3)&1))  {
-			if ((au8SW>>3)&1) {
-				// SW1 on
-			}
-			else {
-				// SW1 off
-			}
-		}
-
-
-		if (u8PrevSW) {
-			// 이전 상태와 같이 않은데, 하나라도 1이면, 다른 스위치가 더 눌린 경우..
-			switch(u8PrevSW) {
-				case STATE_SW1_ON :
-					break;
-				case STATE_SW2_ON :
-					break;
-				case STATE_SW3_ON :
-					break;
-				case STATE_SW4_ON :
-					break;
-				case STATE_SW_DUAL_ON :
-					break;
-				case STATE_SW_DUAL_WAIT :
-					break;
-			}
-		}
-		else {
-			// au8SW off
-			switch(su8State) {
-				case STATE_SW1_ON :
-					u8Result = STATE_SW1_OFF;
-					break;
-				case STATE_SW2_ON :
-					u8Result = STATE_SW2_OFF;
-					break;
-				case STATE_SW3_ON :
-					u8Result = STATE_SW3_OFF;
-					break;
-				case STATE_SW4_ON :
-					u8Result = STATE_SW4_OFF;
-					break;
-				case STATE_SW_DUAL_ON :
-					u8Result = STATE_SW_DUAL_OFF;
-					break;
-			}
-		}
-	}
-	else {
-		switch(su8State) {
-			case STATE_SW1_ON :
-			case STATE_SW2_ON :
-			case STATE_SW3_ON :
-			case STATE_SW4_ON :
-			case STATE_SW1_OFF :
-			case STATE_SW2_OFF :
-			case STATE_SW3_OFF :
-			case STATE_SW4_OFF :
-			case STATE_SW_DUAL_ON :
-			case STATE_SW_DUAL_OFF :
-				u8Result = STATE_SW_NO_ACTION;
-				break;
-		}
-
-
-	}
-	su8State = au8SW;
-#endif
-
-}
-#endif
 void ctrl_rgbled_motor(UINT8 u8RxUART)
 {
 
@@ -675,14 +536,14 @@ UINT8 chk_my_addr(UINT8 au8MyAddr, UINT8 au8RxData)
 void process_my_packet(linefi_packet_t * apstLineFiPkt)
 {
 	switch(apstLineFiPkt->u8Type) {
-		case Type_SetAddr :
-			break;
-		case Type_Bcast :
-			break;
-		case Type_Mcast :
-			break;
-		case Type_Ucast :
-			break;
+//		case Type_SetAddr :
+//			break;
+//		case Type_Bcast :
+//			break;
+//		case Type_Mcast :
+//			break;
+//		case Type_Ucast :
+//			break;
 		case Type_SetLED :
 			LED_R = apstLineFiPkt->pu8Data[0];
 			LED_G = apstLineFiPkt->pu8Data[1];
@@ -802,7 +663,6 @@ void main (void)
 	UINT8 u8RxBufIdx = 0;
 	UINT8 u8RxLFPLen = 0; //UINT8 u8RxLineFiLen = 0; 변수 이름 바꿈, 수신된 LineFiPacket 길이
 #define MAX_RX_BUF_LEN 10
-	UINT8 pu8LineFiRx[MAX_RX_BUF_LEN];
 	UINT8 u8LineFiRxIdx = 0;
 
 	gpio_setup();

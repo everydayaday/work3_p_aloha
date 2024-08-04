@@ -446,124 +446,28 @@ UINT8 state_switches(UINT8 au8SW, UINT8 *apu8SwNum)
 	*apu8SwNum = 0;
 
 	for (i=0;i<5;i++) {
-		switch((su8PrevSW>>i)&1) {
-			case SW_ON :
-				switch((au8SW>>i)&1) {
-					case SW_ON :
-						break;
-					case SW_OFF :
-						su8PrevSW = au8SW;
-						*apu8SwNum |= 1<<i;
-						u8Result = SW_OFF;
-					//	printf_fast_f("sw%d off\n\r",i+1);
-						break;
-				}
-				break;
-			case SW_OFF :
-				switch((au8SW>>i)&1) {
-					case SW_ON :
-						su8PrevSW = au8SW;
-						*apu8SwNum |= 1<<i;
-						u8Result = SW_ON;
-						//u8Cnt++;
-					//	printf_fast_f("sw%d on\n\r",i+1);
-						break;
-					case SW_OFF :
-						break;
-				}
-				break;
+		if (((su8PrevSW>>i)&1) == SW_ON 
+				&& ((au8SW>>i)&1) == SW_OFF ) {
+			// 이전 상태 온에서 지금 오프로 바뀌었을 때,
+			su8PrevSW = au8SW;
+			*apu8SwNum |= 1<<i;
+			u8Result = SW_OFF;
+			//	printf_fast_f("sw%d off\n\r",i+1);
+		}
+		if (((su8PrevSW>>i)&1) == SW_OFF 
+				&& ((au8SW>>i)&1) == SW_ON ) {
+			// 이전 상태 오프에서 지금 온으로 바뀌었을 때,
+
+			su8PrevSW = au8SW;
+			*apu8SwNum |= 1<<i;
+			u8Result = SW_ON;
+			//u8Cnt++;
+			//	printf_fast_f("sw%d on\n\r",i+1);
 		}
 	}
-				//		printf_fast_f("result %d \n\r",u8Result);
+	// printf_fast_f("result %d \n\r",u8Result);
 
 	return u8Result;
-#if 0
-	su8Cnt++;
-	UINT8 u8Result;
-	UINT8 u8PrevSW = su8State;
-	if (au8SW != u8PrevSW) {
-		UINT8 i;
-		for (i=0;i<4;i++) {
-			if (((au8SW>>i)&1) != ((u8PrevSW>>i)&1))  {
-				if ((au8SW>>i)&1) {
-					// SWi on
-				}
-				else {
-					// SWi off
-				}
-				break;
-			}
-		}
-
-		if (((au8SW>>3)&1) != ((u8PrevSW>>3)&1))  {
-			if ((au8SW>>3)&1) {
-				// SW1 on
-			}
-			else {
-				// SW1 off
-			}
-		}
-
-
-		if (u8PrevSW) {
-			// 이전 상태와 같이 않은데, 하나라도 1이면, 다른 스위치가 더 눌린 경우..
-			switch(u8PrevSW) {
-				case STATE_SW1_ON :
-					break;
-				case STATE_SW2_ON :
-					break;
-				case STATE_SW3_ON :
-					break;
-				case STATE_SW4_ON :
-					break;
-				case STATE_SW_DUAL_ON :
-					break;
-				case STATE_SW_DUAL_WAIT :
-					break;
-			}
-		}
-		else {
-			// au8SW off
-			switch(su8State) {
-				case STATE_SW1_ON :
-					u8Result = STATE_SW1_OFF;
-					break;
-				case STATE_SW2_ON :
-					u8Result = STATE_SW2_OFF;
-					break;
-				case STATE_SW3_ON :
-					u8Result = STATE_SW3_OFF;
-					break;
-				case STATE_SW4_ON :
-					u8Result = STATE_SW4_OFF;
-					break;
-				case STATE_SW_DUAL_ON :
-					u8Result = STATE_SW_DUAL_OFF;
-					break;
-			}
-		}
-	}
-	else {
-		switch(su8State) {
-			case STATE_SW1_ON :
-			case STATE_SW2_ON :
-			case STATE_SW3_ON :
-			case STATE_SW4_ON :
-			case STATE_SW1_OFF :
-			case STATE_SW2_OFF :
-			case STATE_SW3_OFF :
-			case STATE_SW4_OFF :
-			case STATE_SW_DUAL_ON :
-			case STATE_SW_DUAL_OFF :
-				u8Result = STATE_SW_NO_ACTION;
-				break;
-		}
-
-
-	}
-	su8State = au8SW;
-#endif
-
 }
 #endif
 
