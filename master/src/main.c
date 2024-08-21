@@ -130,8 +130,6 @@ UINT32 __xdata gpu32UartSpeed[] = {
 	921600  // 13
 };
 
-extern UINT8 gu8UART0;
-
 enum {
 	STATE_SELF,
 	STATE_CROSS,
@@ -421,7 +419,7 @@ enum {
 #if 1
 UINT8 state_switches(UINT8 au8SW, UINT8 *apu8SwNum)
 {
-	static UINT8 su8PrevSW = 0;
+	static UINT8 __xdata su8PrevSW = 0;
 	UINT8 i;
 	//UINT8 u8Cnt = 0;
 	UINT8 u8Result = SW_NONE;
@@ -637,7 +635,7 @@ enum {
 #if 1
 void periodic_func(char * apcStr)
 {
-	static UINT8 su8Cnt = 0;
+	static UINT8 __xdata su8Cnt = 0;
 	/*
 	주기적으로 패킷 보내는 코드
 	*/
