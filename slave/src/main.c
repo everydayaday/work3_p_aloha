@@ -695,14 +695,11 @@ UINT8 i2c_write_bitbanging(UINT8 au8Data)
 	UINT8 i;
 	UINT8 u8Ack;
 
-	SCL_PIN = 1;
-	SDA_PIN = 1;
-
 	SDA_PIN = 0;
 	SCL_PIN = 0;
 
 	for (i=0;i<8;i++) {
-		SDA_PIN = (au8Data>>i)&1;
+		SDA_PIN = (au8Data>>(i))&1;
 		SCL_PIN = 1;
 		SCL_PIN = 0;
 	}
@@ -730,7 +727,7 @@ UINT8 i2c_read_bitbanging()
 
 	for (i=0;i<8;i++) {
 		SCL_PIN = 1;
-		u8Data |= (SDA_PIN<<i);
+		u8Data |= (SDA_PIN<<(i));
 		SCL_PIN = 0;
 	}
 
@@ -742,6 +739,8 @@ UINT8 i2c_read_bitbanging()
 	return u8Data;
 }
 
+#define I2C_W 0
+#define I2C_R 1
 UINT8 i2c_address_bitbanging(UINT8 au8Addr, UINT8 au8RW)
 {
 	/*
@@ -749,13 +748,20 @@ UINT8 i2c_address_bitbanging(UINT8 au8Addr, UINT8 au8RW)
 	R/W = 0 : 쓰기
 	*/
 
-	return i2c_write_bitbanging((au8RW<<7) | (au8Addr&0x7F));
+	UINT8 u8Data;
+
+	u8Data = i2c_write_bitbanging((au8RW<<7) | (au8Addr&0x7F));
+
+	SDA_PIN = 1;
+	SCL_PIN = 1;
+	return u8Data;
 }
 
 void i2c_write_bytes_bitbannging(UINT8 au8Addr, UINT8 au8Size, UINT8 * apu8Data)
 {
 	UINT8 i;
-	i2c_address_bitbanging(au8Addr, 0);
+	
+	i2c_address_bitbanging(au8Addr, I2C_W);
 	for (i=0;i<au8Size;i++) {
 		i2c_write_bitbanging(apu8Data[i]);
 	}
@@ -766,7 +772,7 @@ void i2c_write_bytes_bitbannging(UINT8 au8Addr, UINT8 au8Size, UINT8 * apu8Data)
 void i2c_read_bytes_bitbannging(UINT8 au8Addr, UINT8 au8Size, UINT8 * apu8Data)
 {
 	UINT8 i;
-	i2c_address_bitbanging(au8Addr, 1);
+	i2c_address_bitbanging(au8Addr, I2C_R);
 	for (i=0;i<au8Size;i++) {
 		apu8Data[i] = i2c_read_bitbanging();
 	}
@@ -803,7 +809,7 @@ void main (void)
 	UINT8 u8PwrOnFirstFlag = 1;
 	UINT8 u8StateRxPkt = STATE_RxPKT_INIT;
 
-	UINT8 pu8RxUART[30];
+	UINT8 __xdata pu8RxUART[30];
 
 	linefi_packet_t stLineFiPkt = {
 		1, //UINT8 u8Ver;
@@ -948,8 +954,8 @@ void main (void)
 				{
 					gpu8Data[0] = 0x2c;
 					gpu8Data[1] = 0x06;
-					i2c_write_bytes_bitbannging(0x4a, 2, gpu8Data);
-					i2c_read_bytes_bitbannging(0x4a, 3, gpu8Data);
+					i2c_write_bytes_bitbannging(0x29, 2, gpu8Data);
+					i2c_read_bytes_bitbannging(0x29, 3, gpu8Data);
 
 					printf_fast_f("i2c read 0x%02x 0x%02x 0x%02x\r\n", 
 							gpu8Data[0],
@@ -972,7 +978,7 @@ void main (void)
 					{
 						UINT8 i;
 						for (i=0;i<128;i++) {
-							if (i2c_write_bitbanging(i) == 0) {
+							if (i2c_address_bitbanging(i, I2C_R) == 0) {
 								printf_fast_f("i2c found %x:\r\n",i);
 							}
 							else {
