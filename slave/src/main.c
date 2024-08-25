@@ -777,6 +777,16 @@ void i2c_read_bytes_bitbannging(UINT8 au8Addr, UINT8 au8Size, UINT8 * apu8Data)
 	SCL_PIN = 1;
 }
 
+UINT32 calc_temp(UINT8 au8Data1, UINT8 au8Data2)
+{
+	UINT32 u32Tmp = au8Data1*256 + au8Data2;
+	u32Tmp *= 17500;
+	u32Tmp /= 65535;
+	u32Tmp += -4500;
+	return u32Tmp;
+}
+
+
 //========================================================================================================
 
 
@@ -955,10 +965,16 @@ void main (void)
 
 				case 'I' :
 					i2c_read_bytes_bitbannging(0x4a, 3, gpu8Data);
-					printf_fast_f("i2c read 0x%02x 0x%02x 0x%02x\r\n", 
+					printf_fast_f("i2c read 0x%02x 0x%02x 0x%02x : 0x%02x\r\n", 
 							gpu8Data[0],
 							gpu8Data[1],
-							gpu8Data[2]);
+							gpu8Data[2],
+							crc8(gpu8Data,2,0xFF)
+							);
+
+					printf_fast_f("temp : %lu\r\n", calc_temp(gpu8Data[0], gpu8Data[1]));
+
+
 					break;
 
 				case 'b' : //i2c bit banging
