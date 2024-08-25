@@ -699,7 +699,7 @@ UINT8 i2c_write_bitbanging(UINT8 au8Data)
 	SCL_PIN = 0;
 
 	for (i=0;i<8;i++) {
-		SDA_PIN = (au8Data>>(i))&1;
+		SDA_PIN = (au8Data>>(7-i))&1;
 		SCL_PIN = 1;
 		SCL_PIN = 0;
 	}
@@ -727,7 +727,7 @@ UINT8 i2c_read_bitbanging()
 
 	for (i=0;i<8;i++) {
 		SCL_PIN = 1;
-		u8Data |= (SDA_PIN<<(i));
+		u8Data |= (SDA_PIN<<(7-i));
 		SCL_PIN = 0;
 	}
 
@@ -750,7 +750,7 @@ UINT8 i2c_address_bitbanging(UINT8 au8Addr, UINT8 au8RW)
 
 	UINT8 u8Data;
 
-	u8Data = i2c_write_bitbanging((au8RW<<7) | (au8Addr&0x7F));
+	u8Data = i2c_write_bitbanging((au8Addr<<1) | au8RW);
 
 	SDA_PIN = 1;
 	SCL_PIN = 1;
@@ -951,34 +951,24 @@ void main (void)
 					gu8ULTestMode = ULTMODE_DATA;
 					break;
 				case 'i' :
-				{
 					gpu8Data[0] = 0x2c;
 					gpu8Data[1] = 0x06;
-					i2c_write_bytes_bitbannging(0x29, 2, gpu8Data);
-					i2c_read_bytes_bitbannging(0x29, 3, gpu8Data);
+					i2c_write_bytes_bitbannging(0x4a, 2, gpu8Data);
+					break;
 
+				case 'I' :
+					i2c_read_bytes_bitbannging(0x4a, 3, gpu8Data);
 					printf_fast_f("i2c read 0x%02x 0x%02x 0x%02x\r\n", 
 							gpu8Data[0],
 							gpu8Data[1],
 							gpu8Data[2]);
-				}
 					break;
-				case 'w' :
-				{
-					printf_fast_f("i2c write:\r\n");
-				}
-					break;
-				case 'W' :
-				{
-					//i2c_process(0x55);
-					printf_fast_f("i2c write:\r\n");
-				}
-					break;
+
 				case 'b' : //i2c bit banging
 					{
 						UINT8 i;
 						for (i=0;i<128;i++) {
-							if (i2c_address_bitbanging(i, I2C_R) == 0) {
+							if (i2c_address_bitbanging(i,I2C_W) == 0) {
 								printf_fast_f("i2c found %x:\r\n",i);
 							}
 							else {
