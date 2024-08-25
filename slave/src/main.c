@@ -1008,7 +1008,7 @@ void main (void)
 				case 'b' : //i2c bit banging
 					{
 						UINT8 i;
-						for (i=0;i<128;i++) {
+						for (i=8;i<128-8;i++) {
 							if (i2c_address_bitbanging(i,I2C_W) == 0) {
 								printf_fast_f("i2c found %x:\r\n",i);
 							}
