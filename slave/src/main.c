@@ -679,8 +679,8 @@ void i2c_setup()
 	set_EI2C;
 	set_EA;
 
-	set_I2CEN;
-	set_AA;
+//	set_I2CEN;
+//	set_AA;
 }
 
 void i2c_master_write()
@@ -689,10 +689,16 @@ void i2c_master_write()
 	R/W = 1 : 읽기
 	R/W = 0 : 쓰기
 	*/
+	set_STA;
+	clr_SI;
+	while (!SI);
+
+#if 1
+	clr_STA;
 	I2DAT = 0x4a | 0;
 	clr_SI;
 	while (!SI);
-	
+
 	I2DAT = 0x2c;
 	clr_SI;
 	while (!SI);
@@ -700,6 +706,8 @@ void i2c_master_write()
 	I2DAT = 0x06;
 	clr_SI;
 	while (!SI);
+#endif
+	set_STO;
 }
  
 void i2c_master_read(UINT8 *apu8Val1, UINT8 * apu8Val2)
@@ -722,6 +730,263 @@ void i2c_master_read(UINT8 *apu8Val1, UINT8 * apu8Val2)
 	
 	AA = 0; 
 }  
+
+#define I2C_CLOCK               13
+#define EEPROM_SLA              0xA4
+#define EEPROM_WR               0
+#define EEPROM_RD               1
+#define ERROR_CODE              0x78
+#define PAGE_SIZE               32
+
+void init_i2c(void)
+{
+//    /* Set I2C clock rate */
+    I2CLK = I2C_CLOCK; 
+
+    /* Enable I2C */
+//    set_I2CEN;                                   
+}
+
+
+void I2C_Error(void)
+{
+//    P3 = I2STAT;
+//    P3 = ERROR_CODE;
+    while (1);    
+}
+
+void i2c_process(UINT8 u8DAT)
+{
+    UINT32 u32Count;
+
+//--------------------------------------------------------------------------------------------
+//----  Page Write----------------------------------------------------------------------------
+//--------------------------------------------------------------------------------------------
+    /* Step1 */
+    set_STA;                                    /* Send Start bit to I2C EEPROM */
+    clr_SI;
+    while (!SI);                                //Check SI set or not
+    if (I2STAT != 0x08)                         //Check status value after every step
+        I2C_Error();
+    
+    /* Step2 */
+    clr_STA;                                    //STA=0
+    I2DAT = (EEPROM_SLA | EEPROM_WR);
+    clr_SI;
+    while (!SI);                                //Check SI set or not
+    if (I2STAT != 0x18)              
+        I2C_Error();
+
+    /* Step3 */
+    I2DAT = 0x00;                               //address high for I2C EEPROM
+    clr_SI;
+    while (!SI);                                //Check SI set or not
+    if (I2STAT != 0x28)              
+        I2C_Error();
+                    
+    /* Step4 */
+    I2DAT = 0x00;                               //address low for I2C EEPROM
+    clr_SI;
+    while (!SI);                                //Check SI set or not
+    if (I2STAT != 0x28)              
+        I2C_Error();
+
+    /* Step5 */
+    for (u32Count = 0; u32Count < PAGE_SIZE; u32Count++)
+    {
+        I2DAT = u8DAT;
+        clr_SI;
+        while (!SI);                            //Check SI set or not
+        if (I2STAT != 0x28)              
+            I2C_Error();
+
+        u8DAT = ~u8DAT;        
+    }
+
+//--------------------------------------------------------------------------------------------
+//----  Waitting the ready for I2C write------------------------------------------------------
+//--------------------------------------------------------------------------------------------
+    /* Step6 */
+    do{
+        set_STO;
+        clr_SI;
+        
+        set_STA;                                //Check if no ACK is returned by EEPROM, it is under timed-write cycle
+        clr_SI;
+        while (!SI);                            //Check SI set or not
+        if (I2STAT != 0x08)                     //Check status value after every step
+            I2C_Error();
+
+        clr_STA;
+        I2DAT = (EEPROM_SLA | EEPROM_WR);
+        clr_SI;
+        while (!SI);                            //Check SI set or not
+    }while (I2STAT != 0x18);
+    
+    /* Step7 */
+    set_STO;
+    clr_SI;
+    while (STO);                                /* Check STOP signal */
+//--------------------------------------------------------------------------------------------
+//----  Page Read ----------------------------------------------------------------------------
+//--------------------------------------------------------------------------------------------
+    /* Step8 */
+    set_STA;
+    clr_SI;          
+    while (!SI);                                //Check SI set or not
+    if (I2STAT != 0x08)                         //Check status value after every step
+        I2C_Error();
+
+    /* Step9 */
+    I2DAT = (EEPROM_SLA | EEPROM_WR);
+    clr_STA;
+    clr_SI;
+    while (!SI);                                //Check SI set or not
+    if (I2STAT != 0x18)              
+        I2C_Error();
+
+    /* Step10 */
+    I2DAT = 0x00;                               //address high for I2C EEPROM
+    clr_SI;
+    while (!SI);                                //Check SI set or not
+    if (I2STAT != 0x28)              
+        I2C_Error();
+
+    /* Step11 */
+    I2DAT = 0x00;                               //address low for I2C EEPROM
+    clr_SI;
+    while (!SI);                                //Check SI set or not
+    if (I2STAT != 0x28)              
+        I2C_Error();
+
+    /* Step12 */
+    /* Repeated START */
+    set_STA;                       
+    clr_SI;
+    while (!SI);                                //Check SI set or not
+    if (I2STAT != 0x10)                         //Check status value after every step
+        I2C_Error();
+    
+    /* Step13 */
+    clr_STA;                                    //STA needs to be cleared after START codition is generated
+    I2DAT = (EEPROM_SLA | EEPROM_RD);
+    clr_SI;
+    while (!SI);                                //Check SI set or not
+    if (I2STAT != 0x40)              
+        I2C_Error();
+    
+    /* Step14 */
+    for (u32Count = 0; u32Count <PAGE_SIZE-1; u32Count++)
+    {
+        set_AA;
+        clr_SI;        
+        while (!SI);                            //Check SI set or not
+
+        if (I2STAT != 0x50)              
+            I2C_Error();
+        
+        if (I2DAT != u8DAT)             
+            I2C_Error();
+        u8DAT = ~u8DAT; 
+    } 
+    
+    /* Step15 */
+    clr_AA;
+    clr_SI;
+    while (!SI);                                //Check SI set or not
+    if (I2STAT != 0x58)              
+        I2C_Error();
+
+    /* Step16 */
+    set_STO;
+    clr_SI;
+    while (STO);                                /* Check STOP signal */ 
+}
+
+void i2c_start(void)
+{
+	set_STA;                                  
+	clr_SI;
+//	while(SI == 0);   
+}
+#define SCL_PIN  P13
+#define SDA_PIN  P14
+
+UINT8 i2c_write_bitbanging_(UINT8 au8Data)
+{
+
+	/*
+	P13_OpenDrain_Mode;
+	P14_OpenDrain_Mode;
+	*/
+	UINT8 i;
+	for (i=0;i<8;i++) {
+		printf_fast_f("aaa %d\r\n",i);
+		SDA_PIN = (au8Data>>i)&1;
+		nop;
+		SCL_PIN = 1;
+		nop; nop; nop;
+		SCL_PIN = 0;
+		nop; nop; nop;
+	}
+
+
+return 0;
+
+
+}
+
+UINT8 i2c_write_bitbanging(UINT8 au8Data)
+{
+	/*
+	P13_OpenDrain_Mode;
+	P14_OpenDrain_Mode;
+	*/
+	UINT8 i;
+	UINT8 u8Ack;
+
+	SCL_PIN = 1;
+	SDA_PIN = 1;
+	nop;
+
+	SDA_PIN = 0;
+	nop;
+	SCL_PIN = 0;
+	nop;
+
+	for (i=0;i<8;i++) {
+		SDA_PIN = (au8Data>>i)&1;
+		nop;
+		SCL_PIN = 1;
+		nop; nop; nop;
+		SCL_PIN = 0;
+		nop; nop; nop;
+	}
+
+	SDA_PIN = 1;
+	nop; nop; nop;
+	nop; nop; nop;
+	nop; nop; nop;
+	SCL_PIN = 1;
+
+	if (SDA_PIN == 1) {
+		u8Ack = 1;
+	}
+	else {
+		u8Ack = 0;
+	}
+	nop; nop; nop;
+	nop; nop; nop;
+	SCL_PIN = 0;
+	nop; nop; nop;
+	nop; nop; nop;
+	SCL_PIN = 1;
+
+	return u8Ack;
+}
+
+//========================================================================================================
+
 
 /************************************************************************************************************
  *    Main function 
@@ -770,6 +1035,7 @@ void main (void)
 
 	gpio_setup();
 	uart_setup();
+	init_i2c();
 	i2c_setup();
 	//InitialUART1_Timer3(57600);
 	//InitialUART1_Timer3(115200);
@@ -892,9 +1158,10 @@ void main (void)
 				case 'i' :
 				{
 					UINT8 __xdata u8Data1,u8Data2;
-					i2c_master_read(&u8Data1, &u8Data2);
-
-					printf_fast_f("i2c read: %d %d\r\n", u8Data1, u8Data2);
+//					i2c_master_read(&u8Data1, &u8Data2);
+					//printf_fast_f("i2c read: %d %d\r\n", u8Data1, u8Data2);
+					printf_fast_f("i2c read SI: %d\r\n", SI);
+					printf_fast_f("i2c read SDA: %d\r\n", SDA_PIN);
 				}
 					break;
 				case 'w' :
@@ -903,7 +1170,26 @@ void main (void)
 					printf_fast_f("i2c write:\r\n");
 				}
 					break;
-
+				case 'W' :
+				{
+					//i2c_process(0x55);
+					i2c_start();
+					printf_fast_f("i2c write:\r\n");
+				}
+					break;
+				case 'b' : //i2c bit banging
+					{
+						UINT16 i;
+						for (i=0;i<256;i++) {
+							if (i2c_write_bitbanging(i) == 0) {
+								printf_fast_f("i2c found %x:\r\n",i);
+							}
+							else {
+						//		printf_fast_f("i2c not found %x:\r\n",i);
+							}
+						}
+					}
+					break;
 
 			}
 		} // if (get_uart0_char_nb(&u8RxUART))
