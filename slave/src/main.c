@@ -655,6 +655,74 @@ char get_uart0_char_nb(char * apcResult)
 	return getchar_uart0(apcResult);
 #endif
 }
+
+void i2c_setup()
+{
+
+	//P13_Quasi_Mode;
+	//P14_Quasi_Mode;
+	P13_OpenDrain_Mode;
+	P14_OpenDrain_Mode;
+	// SDA = 1;
+	// SCL = 1;
+
+	//P02_OpenDrain_Mode;
+	//P16_OpenDrain_Mode;
+	//P02 = 1;
+	//P16 = 1;
+	//I2CPX = 1;  // Assign SCL to P0.2 and SDA to P1.6
+	I2CPX = 0;  // Assign SCL to P1.3 and SDA to P1.4
+
+	// set_P1S_3;  // P13 Schmitt triggered input
+
+	// setup interrupt
+	set_EI2C;
+	set_EA;
+
+	set_I2CEN;
+	set_AA;
+}
+
+void i2c_master_write()
+{
+	/*
+	R/W = 1 : 읽기
+	R/W = 0 : 쓰기
+	*/
+	I2DAT = 0x4a | 0;
+	clr_SI;
+	while (!SI);
+	
+	I2DAT = 0x2c;
+	clr_SI;
+	while (!SI);
+	
+	I2DAT = 0x06;
+	clr_SI;
+	while (!SI);
+}
+ 
+void i2c_master_read(UINT8 *apu8Val1, UINT8 * apu8Val2)
+{
+	I2DAT = 0x4a | 1;
+	clr_SI;
+	while (!SI);  
+
+	//not ACK next received DATA else 
+	//if continuing receiving DATA AA = 1; 
+	AA = 1; 
+	clr_SI;
+	while (!SI);  
+
+	*apu8Val1 = I2DAT;
+	AA = 1; 
+	clr_SI;
+	while (!SI);  
+	*apu8Val2 = I2DAT;
+	
+	AA = 0; 
+}  
+
 /************************************************************************************************************
  *    Main function 
  ************************************************************************************************************/
@@ -702,6 +770,7 @@ void main (void)
 
 	gpio_setup();
 	uart_setup();
+	i2c_setup();
 	//InitialUART1_Timer3(57600);
 	//InitialUART1_Timer3(115200);
 	//InitialUART1_Timer3(230400);
@@ -820,6 +889,22 @@ void main (void)
 				case 'p' :
 					gu8ULTestMode = ULTMODE_DATA;
 					break;
+				case 'i' :
+				{
+					UINT8 __xdata u8Data1,u8Data2;
+					i2c_master_read(&u8Data1, &u8Data2);
+
+					printf_fast_f("i2c read: %d %d\r\n", u8Data1, u8Data2);
+				}
+					break;
+				case 'w' :
+				{
+					i2c_master_write();
+					printf_fast_f("i2c write:\r\n");
+				}
+					break;
+
+
 			}
 		} // if (get_uart0_char_nb(&u8RxUART))
 #endif
