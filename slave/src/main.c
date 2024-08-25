@@ -751,9 +751,6 @@ UINT8 i2c_address_bitbanging(UINT8 au8Addr, UINT8 au8RW)
 	UINT8 u8Data;
 
 	u8Data = i2c_write_bitbanging((au8Addr<<1) | au8RW);
-
-	SDA_PIN = 1;
-	SCL_PIN = 1;
 	return u8Data;
 }
 
@@ -974,6 +971,8 @@ void main (void)
 							else {
 						//		printf_fast_f("i2c not found %x:\r\n",i);
 							}
+							SCL_PIN = 1;
+							SDA_PIN = 1;
 						}
 					}
 					break;
