@@ -990,17 +990,23 @@ void main (void)
 					gpu8Data[1] = 0x06;
 					i2c_write_bytes_bitbannging(0x4a, 2, gpu8Data);
 					delay_nop(10000);
-
 					i2c_read_bytes_bitbannging(0x4a, 3, gpu8Data);
-					//i2c_read_bytes_cs_bitbannging(0x4a, 3, gpu8Data);
+#if 0
 					printf_fast_f("i2c read 0x%02x 0x%02x 0x%02x : 0x%02x\r\n", 
 							gpu8Data[0],
 							gpu8Data[1],
 							gpu8Data[2],
 							crc8(gpu8Data,2,0xFF)
 							);
+#endif
+					if (gpu8Data[2] == crc8(gpu8Data,2,0xFF)) {
+						static UINT8 su8Cnt = 0;
+						printf_fast_f("[%d]temp : %lu\r\n", su8Cnt++, calc_temp(gpu8Data[0], gpu8Data[1]));
+					}
+					else {
+						printf_fast_f("crc bad\r\n");
+					}
 
-					printf_fast_f("temp : %lu\r\n", calc_temp(gpu8Data[0], gpu8Data[1]));
 
 
 					break;
