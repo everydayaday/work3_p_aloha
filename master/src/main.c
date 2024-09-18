@@ -108,7 +108,7 @@ UINT8 __xdata gpu8Data2[20] = {
 };
 
 #define LINEFI_DEFAULT_RATE	57600
-#define LINEFI_DEFAULT_RATE_IDX	4
+#define LINEFI_DEFAULT_RATE_IDX	3
 
 extern UINT8 gu8UART;
 uint16 __xdata gu16TimeCnt;
@@ -620,6 +620,9 @@ void act_by_one_key(uint8 au8RxUART, uint8 * apu8LineFiCmd, uint8 * apu8LineFiAd
 			break;
 		case 'H' :
 			print_help();
+			break;
+		case 'T' :
+			send_octet_to_linefi((12<<4)|1);
 			break;
 	} //switch(au8RxUART)
 }

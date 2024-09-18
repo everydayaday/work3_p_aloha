@@ -235,6 +235,7 @@ void pin_interrupt_isr(void) interrupt(7)
 		if (gu16SlitCnt >= 12*gu16RotCnt) {
 			MOTOR_CW = 0;
 			MOTOR_CCW = 0;
+			MOTOR_EN = 0;
 			LED_R = LED_OFF;
 			LED_G = LED_OFF;
 			LED_B = LED_OFF;
@@ -592,12 +593,14 @@ void rot_motor(UINT8 u8RxUART)
 	//gu16RotCnt = (u8RxUART&0xF)*100 + 15*150 ; // 챔버 파라미터
 	if (u8RxUART) {
 		gu16RotCnt = (u8RxUART&0xF)*137 ;
-		MOTOR_CW = 1;
+		//MOTOR_CW = 1;
+		MOTOR_EN = 1;
 		LED_R = LED_ON;
 	}
 	else {
 		MOTOR_CW = 0;
 		MOTOR_CCW = 0;
+		MOTOR_EN = 0;
 	}
 }
 
@@ -669,7 +672,7 @@ void main (void)
 	if (UART_RX == 0) {
 		SEL_RX_POL = 1;
 	}
-	MOTOR_EN = 1;
+	MOTOR_EN = 0;
 
 	while(1) {
 #if 1
