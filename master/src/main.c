@@ -755,8 +755,8 @@ void main (void)
 	LINEFI_TX = 1;
 
 	printf("%s\r\n", gcUartInputMode[u8StateUart0InputMode]);
-	LINEFI_EN0 = 0;
-	LINEFI_EN1 = 1;
+	LINEFI_EN0 = 1;
+	LINEFI_EN1 = 0;
 	LINEFI_EN2 = 0;
 
 	while(1) {
