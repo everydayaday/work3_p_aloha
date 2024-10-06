@@ -23,6 +23,7 @@
 #include "SFR_Macro.h"
 #include "Function_define.h"
 #include "uart.h"
+#include "linefi_packet.h"
 
 #define KEY_ESC (27)
 //#define TIMER0_VAL        (133*10) // 1msec 1kHz
@@ -80,7 +81,7 @@
 #define LED_OFF 1
 #define LED_ON 0
 
-#define MY_ADDR (12)
+#define MY_ADDR (2)
 UINT32 __xdata gpu32UartSpeed[] = {
 	2400, // 0
 	28800, // 1
@@ -235,10 +236,10 @@ void pin_interrupt_isr(void) interrupt(7)
 		if (gu16SlitCnt >= 12*gu16RotCnt) {
 			MOTOR_CW = 0;
 			MOTOR_CCW = 0;
-			MOTOR_EN = 0;
-			LED_R = LED_OFF;
-			LED_G = LED_OFF;
-			LED_B = LED_OFF;
+//			MOTOR_EN = 0;
+//			LED_R = LED_OFF;
+//			LED_G = LED_OFF;
+//			LED_B = LED_OFF;
 		}
 //	printf_fast_f("interrupt2: %d\n\r", su8Cnt++);
 	}
@@ -591,6 +592,7 @@ void rot_motor(UINT8 u8RxUART)
 	*/
 	gu16SlitCnt = 0;
 	//gu16RotCnt = (u8RxUART&0xF)*100 + 15*150 ; // 챔버 파라미터
+#if 0
 	if (u8RxUART) {
 		gu16RotCnt = (u8RxUART&0xF)*137 ;
 		//MOTOR_CW = 1;
@@ -602,6 +604,16 @@ void rot_motor(UINT8 u8RxUART)
 		MOTOR_CCW = 0;
 		MOTOR_EN = 0;
 	}
+#else
+	if (u8RxUART&0xF) {
+		MOTOR_EN = 1;
+		LED_R = LED_ON;
+	}
+	else {
+		MOTOR_EN = 0;
+		LED_R = LED_OFF;
+	}
+#endif
 }
 
 /************************************************************************************************************
@@ -640,7 +652,8 @@ void main (void)
 
 	gpio_setup();
 	uart_setup();
-	InitialUART1_Timer3(57600);
+	//InitialUART1_Timer3(57600);
+	InitialUART1_Timer3(9600);
 
 	MODIFY_HIRC_166();
 

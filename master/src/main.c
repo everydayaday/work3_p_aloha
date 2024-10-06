@@ -621,8 +621,13 @@ void act_by_one_key(uint8 au8RxUART, uint8 * apu8LineFiCmd, uint8 * apu8LineFiAd
 		case 'H' :
 			print_help();
 			break;
-		case 'T' :
-			send_octet_to_linefi((12<<4)|1);
+		case 'R' :
+			send_octet_to_linefi(((*apu8LineFiAddr)<<4)|1);
+			printf_fast_f("Rotate!!:%d \n\r", *apu8LineFiAddr);
+			break;
+		case 'r' :
+			send_octet_to_linefi(((*apu8LineFiAddr)<<4)|0);
+			printf_fast_f("Stop    :%d \n\r", *apu8LineFiAddr);
 			break;
 	} //switch(au8RxUART)
 }
