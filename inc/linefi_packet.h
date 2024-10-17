@@ -43,6 +43,7 @@ typedef enum {
 	ULTxState_INIT,
 	ULTxState_H,
 	ULTxState_L,
+	ULTxState_Tx,
 	ULTxState_NONE
 } uplink_tx_state_t;
 

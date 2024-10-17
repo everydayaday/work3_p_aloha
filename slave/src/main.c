@@ -1062,13 +1062,12 @@ void main (void)
 		if (SWITCH) {
 			switch(gu8UpLinkTxState) {
 				case ULTxState_INIT :
-					gu8UpLinkTxState = ULTxState_H;
-					UART_TX = 1;
+					gu8UpLinkTxState = ULTxState_L;
+					UART_TX = 0;
 					gu8UpLinkTxCnt = 0;
 					break;
-				case ULTxState_H :
-					if (gu8UpLinkTxCnt == 150) {
-						gu8UpLinkTxCnt = 0;
+				case ULTxState_Tx :
+					if (gu8UpLinkTxCnt == 10) {
 						gu8UpLinkTxState = ULTxState_L;
 						UART_TX = 0;
 					}
@@ -1076,8 +1075,20 @@ void main (void)
 						gu8UpLinkTxCnt++;
 					}
 					break;
+				case ULTxState_H :
+					if (gu8UpLinkTxCnt == 100) {
+						gu8UpLinkTxCnt = 0;
+						gu8UART = 1;
+						putchar(0x55);
+						gu8UART = 0;
+						gu8UpLinkTxState = ULTxState_Tx;
+					}
+					else {
+						gu8UpLinkTxCnt++;
+					}
+					break;
 				case ULTxState_L :
-					if (gu8UpLinkTxCnt == 150) {
+					if (gu8UpLinkTxCnt == 100) {
 						gu8UpLinkTxCnt = 0;
 						gu8UpLinkTxState = ULTxState_H;
 						UART_TX = 1;
