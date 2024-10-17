@@ -76,6 +76,8 @@ typedef enum {
 	UART0_INPUT_MODE4,
 	UART0_INPUT_MODE5,
 	UART0_INPUT_MODE6,
+	UART0_INPUT_MODE7,
+	UART0_INPUT_MODE8,
 	MAX_STATE_UART0_INPUT
 
 } uart0_input_mode_t;
@@ -87,7 +89,9 @@ const char * __xdata  gcUartInputMode[MAX_STATE_UART0_INPUT] = {
 	"UART0_INPUT_MODE3:data setting",
 	"UART0_INPUT_MODE4:periodic function",
 	"UART0_INPUT_MODE5:uplink test",
-	"UART0_INPUT_MODE6:loopback test"
+	"UART0_INPUT_MODE6:loopback test",
+	"UART0_INPUT_MODE7:pass through",
+	"UART0_INPUT_MODE8: uplink rx"
 };
 
 
@@ -673,6 +677,7 @@ void main (void)
 	UINT8 __xdata su8SW = 0;
 	UINT8 __xdata u8EnCnt = 0;
 	UINT8 __xdata u8RxUART;
+	UINT8 __xdata u8RxUART1;
 	UINT16 __xdata u16Cnt = 0;
 	UINT8 __xdata u8OutputState = STATE_SELF;
 	UINT8 __xdata u8StateRxCSC = STATE_RxCSC_STOP;
@@ -685,7 +690,7 @@ void main (void)
 	UINT8 __xdata u8StatePeriodicSend = STATE_PS_INIT;
 	UINT8 __xdata u8PSCmd = STATE_PS_INIT;
 
-	uart0_input_mode_t __xdata u8StateUart0InputMode = UART0_INPUT_MODE0;
+	uart0_input_mode_t __xdata u8StateUart0InputMode = UART0_INPUT_MODE7;
 
 	char __xdata pcBuf[100];
 #define MAX_DATA 10
@@ -760,6 +765,7 @@ void main (void)
 	LINEFI_EN2 = 0;
 
 	while(1) {
+
 #if 0 // uart0를 받아서 uart1으로 전달
 #else // CLI
 		if (getchar_uart0(&u8RxUART)) { // 유아트 입력이 있을 때
@@ -935,6 +941,29 @@ void main (void)
 							break;
 						case UART0_INPUT_MODE6 : // 루프백 확인
 							printf_fast_f("%c", u8RxUART);
+							break;
+						case UART0_INPUT_MODE7 : // uart0 --> uart1 통과
+							if ((u8RxUART>>4) == 0) {
+								switch(u8RxUART) {
+									case 0 :
+										LINEFI_EN0 = 0;
+										break;
+									case 1 :
+										LINEFI_EN0 = 1;
+
+										break;
+									case 2 :
+										break;
+									case 3 :
+										break;
+								}
+							}
+							else {
+								send_octet_to_linefi(u8RxUART);
+								printf_fast_f("OK");
+							}
+							break;
+						case UART0_INPUT_MODE8 : // 상향 수신
 							break;
 					} //switch(u8StateUart0InputMode)
 					break;
@@ -1256,5 +1285,14 @@ void main (void)
 				}
 				break;
 		}
+
+		if  (u8StateUart0InputMode == UART0_INPUT_MODE8) {
+			if (getchar_uart1(&u8RxUART1)) { // 라인파이 상향 수신
+				if (u8RxUART1 == 0x55) {
+					putchar_uart0('R');
+				}
+			}
+		}
+
 	} //while(1)
 }
