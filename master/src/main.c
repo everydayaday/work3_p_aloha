@@ -690,7 +690,8 @@ void main (void)
 	UINT8 __xdata u8StatePeriodicSend = STATE_PS_INIT;
 	UINT8 __xdata u8PSCmd = STATE_PS_INIT;
 
-	uart0_input_mode_t __xdata u8StateUart0InputMode = UART0_INPUT_MODE7;
+	//uart0_input_mode_t __xdata u8StateUart0InputMode = UART0_INPUT_MODE7;
+	uart0_input_mode_t __xdata u8StateUart0InputMode = UART0_INPUT_MODE8;
 
 	char __xdata pcBuf[100];
 #define MAX_DATA 10
@@ -1290,6 +1291,9 @@ void main (void)
 			if (getchar_uart1(&u8RxUART1)) { // 라인파이 상향 수신
 				if (u8RxUART1 == 0x55) {
 					putchar_uart0('R');
+				}
+				if (u8RxUART1 == 0x56) {
+					putchar_uart0('T');
 				}
 			}
 		}

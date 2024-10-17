@@ -204,6 +204,17 @@ enum { // Voltage Polarity Modulation
 	STATE_RxPKT_NONE
 };
 
+enum { // Current Amplitude Modulation
+	STATE_TxPKT_INIT,
+	STATE_TxPKT_IdleH,
+	STATE_TxPKT_IdleL,
+	STATE_TxPKT_START,
+	STATE_TxPKT_END,
+	STATE_TxPKT_A,
+	STATE_TxPKT_B,
+	STATE_TxPKT_NONE
+};
+
 enum {
 	MS_STOP,
 	MS_ROT_CW,
@@ -845,6 +856,7 @@ void main (void)
 	UINT8 u8LineFiCmd = 1;
 	UINT8 u8PwrOnFirstFlag = 1;
 	UINT8 u8StateRxPkt = STATE_RxPKT_INIT;
+	UINT8 u8StateTxPkt = STATE_TxPKT_INIT;
 
 	UINT8 __xdata pu8RxUART[30];
 
@@ -1060,6 +1072,21 @@ void main (void)
 		} //if (u8PrevSwitch != SWITCH)
 #if 1 // 상향 신호
 		if (SWITCH) {
+#if 0
+//			TOGGLE(UART_TX);
+			preamble();
+			preamble();
+			putchar_manchester(0x55);
+			putchar_manchester(0x55);
+			putchar_manchester(0x55);
+			putchar_manchester(0x55);
+			putchar_manchester(0x55);
+			putchar_manchester(0x55);
+//			putchar_manchester('0');
+#endif
+			gu8ULTestMode = ULTMODE_INIT;
+
+
 			switch(gu8UpLinkTxState) {
 				case ULTxState_INIT :
 					gu8UpLinkTxState = ULTxState_L;
@@ -1076,10 +1103,10 @@ void main (void)
 					}
 					break;
 				case ULTxState_H :
-					if (gu8UpLinkTxCnt == 100) {
+					if (gu8UpLinkTxCnt == 10) {
 						gu8UpLinkTxCnt = 0;
 						gu8UART = 1;
-						putchar(0x55);
+						putchar(0x56);
 						gu8UART = 0;
 						gu8UpLinkTxState = ULTxState_Tx;
 					}
@@ -1088,7 +1115,7 @@ void main (void)
 					}
 					break;
 				case ULTxState_L :
-					if (gu8UpLinkTxCnt == 100) {
+					if (gu8UpLinkTxCnt == 10) {
 						gu8UpLinkTxCnt = 0;
 						gu8UpLinkTxState = ULTxState_H;
 						UART_TX = 1;
@@ -1099,64 +1126,10 @@ void main (void)
 					break;
 				case ULTxState_NONE :
 					break;
-			}
-#if 0
-//			TOGGLE(UART_TX);
-			preamble();
-			preamble();
-			putchar_manchester(0x55);
-			putchar_manchester(0x55);
-			putchar_manchester(0x55);
-			putchar_manchester(0x55);
-			putchar_manchester(0x55);
-			putchar_manchester(0x55);
-//			putchar_manchester('0');
-#endif
-			gu8ULTestMode = ULTMODE_INIT;
-		}
-#endif
-#if 0
-		if (SWITCH) {
-			switch(gu8UpLinkTxState) {
-				case ULTxState_INIT :
-					gu8UpLinkTxState = ULTxState_H;
-					UART_TX = 1;
-					gu8UpLinkTxCnt = 0;
-					break;
-				case ULTxState_H :
-					if (gu8UpLinkTxCnt == 10) {
-						putchar(0x55);
-						gu8UpLinkTxState = ULTxState_NONE;
-					}
-					else {
-						gu8UpLinkTxCnt++;
-					}
-//					gu8UpLinkTxState = ULTxState_L;
-//					UART_TX = 0;
-					break;
-				case ULTxState_L :
-					gu8UpLinkTxState = ULTxState_H;
-					UART_TX = 1;
-					break;
-				case ULTxState_NONE :
-					break;
-			}
-#if 0
-//			TOGGLE(UART_TX);
-			preamble();
-			preamble();
-			putchar_manchester(0x55);
-			putchar_manchester(0x55);
-			putchar_manchester(0x55);
-			putchar_manchester(0x55);
-			putchar_manchester(0x55);
-			putchar_manchester(0x55);
-//			putchar_manchester('0');
-#endif
-			gu8ULTestMode = ULTMODE_INIT;
-		}
-#endif
+			} //switch(gu8UpLinkTxState)
 
+		}
+#endif
 		else {
 			gu8UpLinkTxState = ULTxState_INIT;
 			switch(gu8ULTestMode) {
@@ -1249,5 +1222,6 @@ void main (void)
 			u8StateRxPkt = STATE_RxPKT_INIT;
 			break;
 		} //switch(u8StateRxPkt)
+
 	} //while(1)
 }

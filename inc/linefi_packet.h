@@ -47,7 +47,6 @@ typedef enum {
 	ULTxState_NONE
 } uplink_tx_state_t;
 
-
 typedef struct {
 	uint8 u8Ver;
 	uint8 u8Type;
