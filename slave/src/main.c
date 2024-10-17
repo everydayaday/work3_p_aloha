@@ -99,7 +99,7 @@ enum {
 
 uplink_mode_t __xdata gu8ULTestMode = ULTMODE_INIT;
 uplink_tx_state_t __xdata gu8UpLinkTxState = ULTxState_INIT;
-UINT16  __xdata gu8UpLinkTxCnt;
+UINT8  __xdata gu8UpLinkTxCnt;
 UINT8 __xdata gu8ULTestData = 0;
 UINT8 __xdata gu8RateIdx = 4;
 
@@ -1067,7 +1067,7 @@ void main (void)
 					gu8UpLinkTxCnt = 0;
 					break;
 				case ULTxState_H :
-					if (gu8UpLinkTxCnt == 500) {
+					if (gu8UpLinkTxCnt == 150) {
 						gu8UpLinkTxCnt = 0;
 						gu8UpLinkTxState = ULTxState_L;
 						UART_TX = 0;
@@ -1077,7 +1077,7 @@ void main (void)
 					}
 					break;
 				case ULTxState_L :
-					if (gu8UpLinkTxCnt == 500) {
+					if (gu8UpLinkTxCnt == 150) {
 						gu8UpLinkTxCnt = 0;
 						gu8UpLinkTxState = ULTxState_H;
 						UART_TX = 1;
