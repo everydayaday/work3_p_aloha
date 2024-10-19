@@ -23,7 +23,9 @@
 #include "uart.h"
 #include "linefi_packet.h"
 
-#define KEY_ESC (27)
+#define KEY_ESC (27) // esc, ctrl-3, ctrl-[
+#define KEY_28 (28) // ascii-28, ctrl-4
+#define KEY_29 (29) // ascii-29, ctrl-5, ctrl-]
 #define TIMER0_VAL        (133*80+605) // 1msec 1kHz 20초에 19,964
 //#define TIMER0_VAL        (133*80+610) // 1msec 1kHz 20초에 19,930
 //#define TIMER0_VAL        (133*80+612) // 1msec 1kHz 20초에  19,928
@@ -170,6 +172,8 @@ void print_char(char au8Data)
 {
 	switch(au8Data) {
 		case KEY_ESC :
+		case KEY_28 :
+		case KEY_29 :
 			break;
 		case '\r' :
 			printf_fast_f("\r\n");
@@ -779,6 +783,15 @@ void main (void)
 					}
 					printf("%s\r\n", gcUartInputMode[u8StateUart0InputMode]);
 					break;
+				case KEY_28 :
+				case KEY_29 :
+					u8StateUart0InputMode--;
+					if (u8StateUart0InputMode == 255) {
+						u8StateUart0InputMode = MAX_STATE_UART0_INPUT-1;
+					}
+					printf("%s\r\n", gcUartInputMode[u8StateUart0InputMode]);
+					break;
+
 				default :
 					switch(u8StateUart0InputMode) {
 						case UART0_INPUT_MODE0 :
