@@ -87,6 +87,7 @@ __code __at (BASE_ADDRESS) char gpcEEPROM[128] = "";
 #define LINEFI_RATE_IDX	3
 
 uint8 gu8MyAddr;
+uint8 gu8Dur = 0;
 
 UINT8 __xdata gpu8Data[20];
 UINT8 __xdata gu8MotorState = 0;
@@ -1041,6 +1042,14 @@ void main (void)
 					}
 					break;
 
+				case '+' :
+					gu8Dur ++;
+					printf_fast_f("gu8Dur:%d\r\n",gu8Dur);
+					break;
+				case '-' :
+					gu8Dur --;
+					printf_fast_f("gu8Dur:%d\r\n",gu8Dur);
+					break;
 			}
 		} // if (get_uart0_char_nb(&u8RxUART))
 #endif
@@ -1103,19 +1112,26 @@ void main (void)
 					}
 					break;
 				case ULTxState_H :
-					if (gu8UpLinkTxCnt == 10) {
+					if (gu8UpLinkTxCnt == gu8Dur) {
+#if 0
 						gu8UpLinkTxCnt = 0;
 						gu8UART = 1;
 						putchar(0x56);
 						gu8UART = 0;
 						gu8UpLinkTxState = ULTxState_Tx;
+#endif
+#if 1
+						gu8UpLinkTxCnt = 0;
+						UART_TX = 0;
+						gu8UpLinkTxState = ULTxState_L;
+#endif
 					}
 					else {
 						gu8UpLinkTxCnt++;
 					}
 					break;
 				case ULTxState_L :
-					if (gu8UpLinkTxCnt == 10) {
+					if (gu8UpLinkTxCnt == gu8Dur) {
 						gu8UpLinkTxCnt = 0;
 						gu8UpLinkTxState = ULTxState_H;
 						UART_TX = 1;
