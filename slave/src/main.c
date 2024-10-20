@@ -1102,6 +1102,7 @@ void main (void)
 					su8InitCnt++;
 					gu8PPambleDurCnt++;
 					gu8UART = 0;
+					gu8PPambleCnt = 0;
 				}
 			}
 
