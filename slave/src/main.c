@@ -1083,14 +1083,20 @@ void main (void)
 
 		if (SWITCH) {
 			if (gu8PPambleCnt < gu8PPambleNum) {
-				TOGGLE(UART_TX);
-				gu8PPambleCnt++;
+				if (UART_TX) {
+					UART_TX = 0;
+				}
+				else {
+					UART_TX = 1;
+					gu8PPambleCnt++;
+				}
 			}
 			else {
 				if (gu8PPambleDurCnt < gu8PPambleDurHNum) {
 					static UINT8 __xdata su8InitCnt = 0;
 					UINT8 i;
 					gu8UART = 1;
+					putchar(0xF0);
 					putchar(0xF0);
 					putchar(0xF0);
 					putchar(0xF0);
