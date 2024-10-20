@@ -126,6 +126,7 @@ UINT8 __xdata gpu8Data2[20] = {
 UINT8 __xdata gpu8RxBuf[16];
 UINT8 __xdata gu8RxBufCnt;
 UINT8 __xdata gu8MCRxBuf; // 맨체스터 코드 버프
+UINT8 __xdata gu8Cnt1, gu8Cnt2; // 맨체스터 코드 버프
 
 #define LINEFI_DEFAULT_RATE	57600
 #define LINEFI_DEFAULT_RATE_IDX	5
@@ -649,11 +650,12 @@ void make_linefi_payload(UINT32 au32LineFiUpSpeed, UINT8 au8ULTMode, UINT8 au8UL
 	apu8Data[4] = au8ULTData;
 }
 
-void print_linefi_uplink_rx(UINT8 auCnt, UINT8 * apuBuf)
+void print_linefi_uplink_rx(UINT8 auCnt, UINT8 * apuBuf, UINT8 aucCnt1, UINT8 aucCnt2)
 {
 	static UINT8 __xdata su8Cnt = 0;
 	UINT8 __xdata i;
 	printf_fast_f("%d-----------------------\r\n",su8Cnt++);
+	printf_fast_f("%d,%d\r\n",aucCnt1, aucCnt2);
 	for (i=0;i<auCnt;i++) {
 		printf_fast_f("%d:0x%x\r\n", i, apuBuf[i]);
 	}
@@ -1291,12 +1293,17 @@ void main (void)
 						if (u8RxUART1 == 0x00) {
 							// 프리프리앰블 수신하면,  프리앰을 시작 상태 천이
 							gu8LineFiUpRxState = LFURxState_PPAMBLE;
+							gu8Cnt1 = 1;
 						}
 						break;
 					case LFURxState_PPAMBLE : // 프리프리앰블 상태..
 						if (u8RxUART1 == 0xF0) {
 							// 프리앰블 수신하면,  프리앰을 시작 상태 천이
 							gu8LineFiUpRxState = LFURxState_PREAMBLE;
+							gu8Cnt2 = 1;
+						}
+						else {
+							gu8Cnt1++;
 						}
 						break;
 
@@ -1305,7 +1312,7 @@ void main (void)
 						if (u8RxUART1 == 0xF0) {
 							// 계속 프리앰블이면, 기다림
 							//gu8LineFiUpRxState = LFURxState_PREAMBLE;
-
+							gu8Cnt2 ++;
 						}
 #if 0
 						else if (chk_manchester(u8RxUART1) == MC_OK) {
@@ -1330,7 +1337,8 @@ void main (void)
 					case LFURxState_RX :
 						gpu8RxBuf[gu8RxBufCnt++] = u8RxUART1;
 						if (gu8RxBufCnt == 8) {
-							print_linefi_uplink_rx(gu8RxBufCnt, gpu8RxBuf);
+							print_linefi_uplink_rx(gu8RxBufCnt, gpu8RxBuf, gu8Cnt1, gu8Cnt2);
+
 							gu8LineFiUpRxState = LFURxState_INIT;
 						}
 						break;
@@ -1354,7 +1362,7 @@ void main (void)
 						}
 						else {
 							// 맨코가 아니면..
-							print_linefi_uplink_rx(gu8RxBufCnt, gpu8RxBuf);
+							//print_linefi_uplink_rx(gu8RxBufCnt, gpu8RxBuf);
 							if (gu8RxBufCnt > 1) {
 								// 2바이트 이상이면 CRC 확인
 							}
