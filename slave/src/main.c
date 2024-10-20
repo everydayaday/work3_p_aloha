@@ -1124,10 +1124,10 @@ void main (void)
 //								putchar(0x55);
 //								putchar(0x55);
 #if 1
-								putchar_manchester(0x00);
-								putchar_manchester(0x00);
-								putchar_manchester(0xFF);
-								putchar_manchester(0xFF);
+								putchar_manchester(0x12);
+								putchar_manchester(0x34);
+								putchar_manchester(0x56);
+								putchar_manchester(0x78);
 #endif
 							gu8UART = 0;
 							gu8UpLinkTxState = ULTxState_Tx;

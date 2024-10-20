@@ -126,8 +126,9 @@ UINT8 __xdata gpu8RxBuf[16];
 UINT8 __xdata gu8RxBufCnt;
 UINT8 __xdata gu8MCRxBuf; // 맨체스터 코드 버프
 
-#define LINEFI_DEFAULT_RATE	57600
-#define LINEFI_DEFAULT_RATE_IDX	5
+//#define LINEFI_DEFAULT_RATE	57600
+#define LINEFI_DEFAULT_RATE	115200
+#define LINEFI_DEFAULT_RATE_IDX	4
 
 extern UINT8 gu8UART;
 uint16 __xdata gu16TimeCnt;
@@ -650,7 +651,8 @@ void make_linefi_payload(UINT32 au32LineFiUpSpeed, UINT8 au8ULTMode, UINT8 au8UL
 
 void print_linefi_uplink_rx(UINT8 auCnt, UINT8 * apuBuf)
 {
-	static UINT8 __xdata i;
+	UINT8 i;
+	printf_fast_f("---------------\r\n");
 	for (i=0;i<auCnt;i++) {
 		printf_fast_f("%d:0x%x\r\n", i, apuBuf[i]);
 	}
@@ -1286,10 +1288,12 @@ void main (void)
 					case LFURxState_INIT :
 						if (u8RxUART1 == 0xF0) {
 							// 프리앰블 수신하면,  프리앰을 시작 상태 천이
+						printf_fast_f("0x%x ", u8RxUART1);
 							gu8LineFiUpRxState = LFURxState_PREAMBLE;
 						}
 						break;
 					case LFURxState_PREAMBLE : //프리앰블 받은 상태
+						printf_fast_f("0x%x ", u8RxUART1);
 						if (u8RxUART1 == 0xF0) {
 							// 계속 프리앰블이면, 기다림
 							//gu8LineFiUpRxState = LFURxState_PREAMBLE;
@@ -1300,10 +1304,12 @@ void main (void)
 							gu8LineFiUpRxState = LFURxState_RX_MCH;
 							gu8MCRxBuf = conv_manchester2nibble(u8RxUART1)<<4;
 							gu8RxBufCnt = 0; //여기서 미리 초기화
+						printf_fast_f("\r\n");
 						}
 						else {
 							// 프리앰블도 아니고 맨체스터 코드도 아니면 초기화
 							gu8LineFiUpRxState = LFURxState_INIT;
+						printf_fast_f("\r\n");
 						}
 						break;
 
