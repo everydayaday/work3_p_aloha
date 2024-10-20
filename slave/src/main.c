@@ -88,9 +88,9 @@ __code __at (BASE_ADDRESS) char gpcEEPROM[128] = "";
 
 uint8 gu8MyAddr;
 uint8 __xdata gu8DurH = 7;
-uint8 __xdata gu8DurL = 12;
-uint8 __xdata gu8DurTx = 1;
-uint8 __xdata gu8LineFiUpRate = 5;
+uint8 __xdata gu8DurL = 10;
+uint8 __xdata gu8DurTx = 3;
+uint8 __xdata gu8LineFiUpRate = 4;
 uint8 __xdata gu8DurMode = 0;
 uint8 __xdata gu8TxCnt = 20;
 uint8 __xdata gu8DurModeMax = 3;
