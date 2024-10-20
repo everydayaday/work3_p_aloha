@@ -87,11 +87,10 @@ __code __at (BASE_ADDRESS) char gpcEEPROM[128] = "";
 #define LINEFI_RATE_IDX	3
 
 uint8 gu8MyAddr;
-uint8 __xdata gu8LineFiUpRate = 0;
-uint8 __xdata gu8DurTx = 0;
-uint8 __xdata gu8DurH = 0;
-uint8 __xdata gu8DurL = 0;
-uint8 __xdata gu8Dur = 0;
+uint8 __xdata gu8DurH = 4;
+uint8 __xdata gu8DurL = 6;
+uint8 __xdata gu8DurTx = 1;
+uint8 __xdata gu8LineFiUpRate = 5;
 uint8 __xdata gu8DurMode = 0;
 uint8 __xdata gu8DurModeMax = 3;
 
@@ -1066,7 +1065,7 @@ void main (void)
 							printf_fast_f("gu8DurH:%d\r\n",gu8DurH);
 							printf_fast_f("gu8DurL:%d\r\n",gu8DurL);
 							printf_fast_f("gu8DurTx:%d\r\n",gu8DurTx);
-							printf_fast_f("%lu\r\n", gpu32UartSpeed[gu8LineFiUpRate]);
+							printf_fast_f("%lu[%d]\r\n", gpu32UartSpeed[gu8LineFiUpRate],gu8LineFiUpRate);
 							gu8DurMode = 0;
 							printf_fast_f("gu8DurH\r\n");
 							break;
@@ -1091,8 +1090,6 @@ void main (void)
 							InitialUART1_Timer3(gpu32UartSpeed[gu8LineFiUpRate]);
 							break;
 					}
-					//printf_fast_f("gu8Dur:%d\r\n",gu8Dur);
-					//printf_fast_f(":%d\r\n",gu8Dur);
 					break;
 				case '-' :
 					switch(gu8DurMode) {
@@ -1113,7 +1110,6 @@ void main (void)
 							InitialUART1_Timer3(gpu32UartSpeed[gu8LineFiUpRate]);
 							break;
 					}
-					//printf_fast_f(":%d\r\n",gu8Dur);
 					break;
 			}
 		} // if (get_uart0_char_nb(&u8RxUART))
@@ -1125,11 +1121,11 @@ void main (void)
 			}
 			else { //떨어질 때
 				//InitialUART1_Timer3(115200);
-				InitialUART1_Timer3(57600);
+				//InitialUART1_Timer3(57600);
 				gu8UART = 0;
 				//printf_fast_f("uart speed: 230400:\n\r");
 				//printf_fast_f("uart speed: 115200:\n\r");
-				printf_fast_f("uart speed: 57600:\n\r");
+				//printf_fast_f("uart speed: 57600:\n\r");
 #if 1
 				static uint8 su8Cnt = 0;
 				su8Cnt++;
@@ -1183,6 +1179,8 @@ void main (void)
 							gu8UpLinkTxCnt = 0;
 							gu8UART = 1;
 							//putchar(0x56);
+							putchar(0x00);
+							putchar(0x00);
 							putchar(0x00);
 							putchar(0x00);
 							putchar(0x00);
