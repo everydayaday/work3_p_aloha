@@ -87,11 +87,12 @@ __code __at (BASE_ADDRESS) char gpcEEPROM[128] = "";
 #define LINEFI_RATE_IDX	3
 
 uint8 gu8MyAddr;
-uint8 __xdata gu8DurH = 4;
-uint8 __xdata gu8DurL = 6;
+uint8 __xdata gu8DurH = 7;
+uint8 __xdata gu8DurL = 12;
 uint8 __xdata gu8DurTx = 1;
 uint8 __xdata gu8LineFiUpRate = 5;
 uint8 __xdata gu8DurMode = 0;
+uint8 __xdata gu8TxCnt = 20;
 uint8 __xdata gu8DurModeMax = 3;
 
 UINT8 __xdata gpu8Data[20];
@@ -890,6 +891,7 @@ void main (void)
 	//InitialUART1_Timer3(57600);
 	//InitialUART1_Timer3(115200);
 	//InitialUART1_Timer3(230400);
+	InitialUART1_Timer3(gpu32UartSpeed[gu8LineFiUpRate]);
 
 	MODIFY_HIRC_166();
 
@@ -1061,11 +1063,15 @@ void main (void)
 						case 3 :
 							printf_fast_f("gu8LineFiUpRate\r\n");
 							break;
+						case 4 :
+							printf_fast_f("gu8TxCnt\r\n");
+							break;
 						default :
 							printf_fast_f("gu8DurH:%d\r\n",gu8DurH);
 							printf_fast_f("gu8DurL:%d\r\n",gu8DurL);
 							printf_fast_f("gu8DurTx:%d\r\n",gu8DurTx);
 							printf_fast_f("%lu[%d]\r\n", gpu32UartSpeed[gu8LineFiUpRate],gu8LineFiUpRate);
+							printf_fast_f("gu8TxCnt:%d\r\n",gu8TxCnt);
 							gu8DurMode = 0;
 							printf_fast_f("gu8DurH\r\n");
 							break;
@@ -1089,6 +1095,10 @@ void main (void)
 							printf_fast_f("%lu\r\n", gpu32UartSpeed[++gu8LineFiUpRate]);
 							InitialUART1_Timer3(gpu32UartSpeed[gu8LineFiUpRate]);
 							break;
+						case 4 :
+							gu8TxCnt ++;
+							printf_fast_f("gu8TxCnt:%d\r\n",gu8TxCnt);
+							break;
 					}
 					break;
 				case '-' :
@@ -1108,6 +1118,10 @@ void main (void)
 						case 3 :
 							printf_fast_f("%lu\r\n", gpu32UartSpeed[--gu8LineFiUpRate]);
 							InitialUART1_Timer3(gpu32UartSpeed[gu8LineFiUpRate]);
+							break;
+						case 4 :
+							gu8TxCnt --;
+							printf_fast_f("gu8TxCnt:%d\r\n",gu8TxCnt);
 							break;
 					}
 					break;
@@ -1176,14 +1190,13 @@ void main (void)
 					if (gu8UpLinkTxCnt == gu8DurH) {
 #if 1
 						if (gu8DurTx) {
+							UINT8 i;
 							gu8UpLinkTxCnt = 0;
 							gu8UART = 1;
 							//putchar(0x56);
-							putchar(0x00);
-							putchar(0x00);
-							putchar(0x00);
-							putchar(0x00);
-							putchar(0x00);
+							for (i = 0;i<gu8TxCnt;i++) {
+								putchar(0x00);
+							}
 							gu8UART = 0;
 							gu8UpLinkTxState = ULTxState_Tx;
 						}
