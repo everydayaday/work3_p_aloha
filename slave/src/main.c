@@ -110,6 +110,13 @@ UINT8  __xdata gu8UpLinkTxCnt;
 UINT8 __xdata gu8ULTestData = 0;
 UINT8 __xdata gu8RateIdx = 4;
 
+const char __xdata  gpcMCN[] = {// gpcManchesterCodeNibble
+	0xA, // 0,b1010
+	0x9, // 1,b1001
+	0x6, // 2,b0110
+	0x5  // 3,b0101
+};
+
 const char * __xdata  gppcULTestMode[] = {
 	"ULTMODE_INIT",
 	"ULTMODE_PREAMBLE",
@@ -117,8 +124,6 @@ const char * __xdata  gppcULTestMode[] = {
 	"ULTMODE_NO_MANCHESTER",
 	"ULTMODE_NONE"
 };
-
-
 
 UINT32 __xdata gpu32UartSpeed[] = {
 	2400, // 0
@@ -149,6 +154,10 @@ extern UINT8 gu8BECnt; // buffer empty
 UINT8 conv_nibble2manchester (UINT8 c)
 {
 	/*
+	76e003에서 너무 느림
+	*/
+
+	/*
 	c의 하위 4비트를 
 	맨체스터 코딩함
 	0b00001101 --> 0b01011001
@@ -173,8 +182,10 @@ UINT8 conv_nibble2manchester (UINT8 c)
 void putchar_manchester (char c) 
 {
 	gu8UART = 1;
-	putchar(conv_nibble2manchester(c));
-	putchar(conv_nibble2manchester(c>>4));
+//	putchar(conv_nibble2manchester(c));
+//	putchar(conv_nibble2manchester(c>>4));
+	putchar( (gpcMCN[(c>>6)&0x3]<<4) | gpcMCN[(c>>4)&0x3]);
+	putchar( (gpcMCN[(c>>2)&0x3]<<4) | gpcMCN[(c>>0)&0x3]);
 	gu8UART = 0;
 	return;
 }
@@ -1195,8 +1206,22 @@ void main (void)
 							gu8UART = 1;
 							//putchar(0x56);
 							for (i = 0;i<gu8TxCnt;i++) {
-								putchar(0x00);
+								//putchar(0x00);
 							}
+								putchar(0xF0);
+								putchar(0xF0);
+								putchar(0xF0);
+								putchar(0xF0);
+//								putchar(0x55);
+//								putchar(0x55);
+//								putchar(0x55);
+//								putchar(0x55);
+#if 1
+								putchar_manchester(0x00);
+								putchar_manchester(0x00);
+								putchar_manchester(0xFF);
+								putchar_manchester(0xFF);
+#endif
 							gu8UART = 0;
 							gu8UpLinkTxState = ULTxState_Tx;
 						}
