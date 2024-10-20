@@ -247,46 +247,6 @@ void pin_interrupt_isr(void) interrupt(7)
 
 }// void pin_interrupt_isr (void) interrupt(7)
 
-UINT8 chk_manchester(UINT8 c)
-{
-	UINT8 i;
-	for (i=0;i<4;i++) {
-		if (((c>>(2*i)) & 1) == ((c>>((2*i+1)))&1)) {
-			// 연속 두 비트가 같으면 맨체스터 코드가 아님
-			return 0;
-		}
-	}
-	return 1;
-}
-
-UINT8 conv_manchester2nibble(UINT8 c)
-{
-	UINT8 i;
-	UINT8 u8Nibble = 0;
-	for (i=0;i<4;i++) {
-		if (c & 1) {
-			u8Nibble |= 0x80;
-		}
-		c >>= 2;
-		u8Nibble >>= 1;
-	}
-	return u8Nibble;
-}
-
-UINT8 conv_manchester2highnibble(UINT8 c)
-{
-	UINT8 i;
-	UINT8 u8Nibble = 0;
-	for (i=0;i<4;i++) {
-		u8Nibble >>= 1;
-		if (c & 1) {
-			u8Nibble |= 0x80;
-		}
-		c >>= 2;
-	}
-	return u8Nibble;
-}
-
 void MODIFY_HIRC_166(void)
 {
 	unsigned char hircmap0,hircmap1;

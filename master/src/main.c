@@ -84,6 +84,16 @@ typedef enum {
 
 } uart0_input_mode_t;
 
+typedef enum {
+	LFURxState_INIT,,
+	LFURxState_PREAMBLE,
+	LFURxState_RX,
+	LFURxState_RX_MCH, // 맨체스터 코드 하이 니블
+	LFURxState_RX_MCL, // 맨체스터 코드 로우 니블
+	LFURxState_CRC,
+	LFURxState_END
+} linefi_uplink_rx_state_t;
+
 const char * __xdata  gcUartInputMode[MAX_STATE_UART0_INPUT] = {
 	"UART0_INPUT_MODE0:one key control",
 	"UART0_INPUT_MODE1:string input",
@@ -95,7 +105,6 @@ const char * __xdata  gcUartInputMode[MAX_STATE_UART0_INPUT] = {
 	"UART0_INPUT_MODE7:pass through",
 	"UART0_INPUT_MODE8: uplink rx"
 };
-
 
 UINT8 __xdata gpu8Data[20] = {
 	1,1,1,1,
@@ -113,12 +122,18 @@ UINT8 __xdata gpu8Data2[20] = {
 	5,5,5,5,
 };
 
+UINT8 __xdata gpu8RxBuf[16];
+UINT8 __xdata gu8RxBufCnt;
+UINT8 __xdata gu8MCRxBuf; // 맨체스터 코드 버프
+
 #define LINEFI_DEFAULT_RATE	57600
-#define LINEFI_DEFAULT_RATE_IDX	3
+#define LINEFI_DEFAULT_RATE_IDX	5
 
 extern UINT8 gu8UART;
 uint16 __xdata gu16TimeCnt;
 uint16 __xdata gu16TimeCntMilliSec;
+linefi_uplink_rx_state_t __xdata gu8LineFiUpRxState = LFURxState_INIT;
+
 UINT32 __xdata gpu32UartSpeed[] = {
 	2400, // 0
 	28800, // 1
@@ -253,46 +268,6 @@ void pin_interrupt_isr(void) interrupt(7)
 	}
 	PIF = 0;
 }// void pin_interrupt_isr (void) interrupt(7)
-
-UINT8 chk_manchester(UINT8 c)
-{
-	UINT8 i;
-	for (i=0;i<4;i++) {
-		if (((c>>(2*i)) & 1) == ((c>>((2*i+1)))&1)) {
-			// 연속 두 비트가 같으면 맨체스터 코드가 아님
-			return 0;
-		}
-	}
-	return 1;
-}
-
-UINT8 conv_manchester2nibble(UINT8 c)
-{
-	UINT8 i;
-	UINT8 u8Nibble = 0;
-	for (i=0;i<4;i++) {
-		if (c & 1) {
-			u8Nibble |= 0x80;
-		}
-		c >>= 2;
-		u8Nibble >>= 1;
-	}
-	return u8Nibble;
-}
-
-UINT8 conv_manchester2highnibble(UINT8 c)
-{
-	UINT8 i;
-	UINT8 u8Nibble = 0;
-	for (i=0;i<4;i++) {
-		u8Nibble >>= 1;
-		if (c & 1) {
-			u8Nibble |= 0x80;
-		}
-		c >>= 2;
-	}
-	return u8Nibble;
-}
 
 void MODIFY_HIRC_166(void)
 {
@@ -673,20 +648,25 @@ void make_linefi_payload(UINT32 au32LineFiUpSpeed, UINT8 au8ULTMode, UINT8 au8UL
 	apu8Data[4] = au8ULTData;
 }
 
+void print_linefi_uplink_rx(UINT8 auCnt, UINT8 * apuBuf)
+{
+	static UINT8 __xdata i;
+	for (i=0;i<auCnt;i++) {
+		printf_fast_f("%d:0x%x\r\n", i, apuBuf[i]);
+	}
+}
 /************************************************************************************************************
  *    Main function 
  ************************************************************************************************************/
 void main (void)
 {
-	UINT8 __xdata su8SW = 0;
-	UINT8 __xdata u8EnCnt = 0;
 	UINT8 __xdata u8RxUART;
 	UINT8 __xdata u8RxUART1;
 	UINT16 __xdata u16Cnt = 0;
 	UINT8 __xdata u8OutputState = STATE_SELF;
 	UINT8 __xdata u8StateRxCSC = STATE_RxCSC_STOP;
 	UINT8 __xdata u8LineFiAddr = 1;
-	UINT8 __xdata u8LineFiSpeed = 4;
+	UINT8 __xdata u8LineFiSpeed = 5;
 	UINT8 __xdata u8LineFiCmd = 1;
 	UINT8 __xdata u8PwrOnFirstFlag = 1;
 	UINT8 __xdata u8SwNum;
@@ -697,7 +677,7 @@ void main (void)
 	//uart0_input_mode_t __xdata u8StateUart0InputMode = UART0_INPUT_MODE7;
 	uart0_input_mode_t __xdata u8StateUart0InputMode = UART0_INPUT_MODE8;
 
-	char __xdata pcBuf[100];
+	char __xdata pcBuf[50];
 #define MAX_DATA 10
 	unsigned char __xdata pu8Data[MAX_DATA] = {0,0,0,0,0,0,0,0,0,0};
 	unsigned char __xdata u8DataIdx = 0;
@@ -1302,6 +1282,61 @@ void main (void)
 
 		if  (u8StateUart0InputMode == UART0_INPUT_MODE8) {
 			if (getchar_uart1(&u8RxUART1)) { // 라인파이 상향 수신
+				switch(gu8LineFiUpRxState) {
+					case LFURxState_INIT :
+						if (u8RxUART1 == 0xF0) {
+							// 프리앰블 수신하면,  프리앰을 시작 상태 천이
+							gu8LineFiUpRxState = LFURxState_PREAMBLE;
+						}
+						break;
+					case LFURxState_PREAMBLE : //프리앰블 받은 상태
+						if (u8RxUART1 == 0xF0) {
+							// 계속 프리앰블이면, 기다림
+							//gu8LineFiUpRxState = LFURxState_PREAMBLE;
+
+						}
+						else if (chk_manchester(u8RxUART1) == MC_OK) {
+							// 맨체스터 코드이면, 하이니블 맨코(맨체스터 코드)로 인식하고 상태천이
+							gu8LineFiUpRxState = LFURxState_RX_MCH;
+							gu8MCRxBuf = conv_manchester2nibble(u8RxUART1)<<4;
+							gu8RxBufCnt = 0; //여기서 미리 초기화
+						}
+						else {
+							// 프리앰블도 아니고 맨체스터 코드도 아니면 초기화
+							gu8LineFiUpRxState = LFURxState_INIT;
+						}
+						break;
+
+					case LFURxState_RX_MCH : // 맨체스터 코드 하이니블을 받은 상태
+						if (chk_manchester(u8RxUART1) == MC_OK) {
+							// 수신데이타가  맨체스터 코드이면, 로우니블 맨코로 인식
+							gpu8RxBuf[gu8RxBufCnt++] = 
+								gu8MCRxBuf | conv_manchester2nibble(u8RxUART1);
+							gu8LineFiUpRxState = LFURxState_RX_MCL;
+						}
+						else {
+							// 하이니블 맨코만 받은 상태에서 맨체스터 코드가 아니면 완전히 깨진 패킷
+							gu8LineFiUpRxState = LFURxState_INIT;
+						}
+						break;
+					case LFURxState_RX_MCL : // 로우니블 맨코를 받은 상태, 다음 하이니블을 기다림
+						if (chk_manchester(u8RxUART1) == MC_OK) {
+							gu8LineFiUpRxState = LFURxState_RX_MCH;
+							gu8MCRxBuf = conv_manchester2nibble(u8RxUART1)<<4;
+						}
+						else {
+							// 맨코가 아니면..
+							print_linefi_uplink_rx(gu8RxBufCnt, gpu8RxBuf);
+							if (gu8RxBufCnt > 1) {
+								// 2바이트 이상이면 CRC 확인
+							}
+							gu8LineFiUpRxState = LFURxState_INIT;
+						}
+						break;
+					case LFURxState_CRC :
+						break;
+				}
+#if 0
 				if (u8RxUART1 == 0x55) {
 					putchar_uart0('R');
 				}
@@ -1311,6 +1346,7 @@ void main (void)
 				else {
 					printf_fast_f("%d\r\n",u8RxUART1);
 				}
+#endif
 			}
 		}
 

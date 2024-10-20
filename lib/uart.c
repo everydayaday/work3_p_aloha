@@ -9,10 +9,37 @@
 //UINT8 __xdata gu8UART; 제대로 전환이 안됨
 UINT8 gu8UART;
 
-UINT8 gu8BNFCnt = 0;
-UINT8 gu8BFCnt = 0;
-UINT8 gu8BNECnt = 0;
-UINT8 gu8BECnt = 0;
+UINT8 __xdata gu8BNFCnt = 0;
+UINT8 __xdata gu8BFCnt = 0;
+UINT8 __xdata gu8BNECnt = 0;
+UINT8 __xdata gu8BECnt = 0;
+
+const char __xdata  gpcN2MC[] = {// Nibble to Manchester Code
+	0xA, // 0,b1010
+	0x9, // 1,b1001
+	0x6, // 2,b0110
+	0x5  // 3,b0101
+};
+
+const char __xdata  gpcMC2N[16] = {// nibble to manchester code
+	0xF,// 0 MC error
+	0xF,// 1 MC error
+	0xF,// 2 MC error
+	0xF,// 3 MC error
+	0xF,// 4 MC error
+	0x3,// 5	0x5  // 3,b0101
+	0x2,// 6	0x6  // 2,b0110
+	0xF,// 7 MC error
+	0xF,// 8 MC error
+	0x1,// 9	0x5  // 1,b1001
+	0x0,// 10	0x5  // 0,b1010
+	0xF,// 11 MC error
+	0xF,// 12 MC error
+	0xF,// 13 MC error
+	0xF,// 14 MC error
+	0xF // 15 MC error
+};
+
 //----------------------------------------------------------------------------------
 // UART0 baud rate initial setting 
 //----------------------------------------------------------------------------------
@@ -678,3 +705,58 @@ void putchar_uart1(char au8Data)
 	set_ES_1;
 }
 #endif
+
+void preamble() 
+{
+	gu8UART = 1;
+	putchar(0xF0);
+	return;
+}
+
+void putchar_manchester(char c) 
+{
+	gu8UART = 1;
+	putchar( (gpcN2MC[(c>>6)&0x3]<<4) | gpcN2MC[(c>>4)&0x3]);
+	putchar( (gpcN2MC[(c>>2)&0x3]<<4) | gpcN2MC[(c>>0)&0x3]);
+	return;
+}
+
+UINT8 chk_manchester(UINT8 c)
+{
+	/*
+	유효한 맨체스터 코드인지 확인
+	*/
+#if 0
+	UINT8 i;
+	for (i=0;i<4;i++) {
+		if (((c>>(2*i)) & 1) == ((c>>((2*i+1)))&1)) {
+			// 연속 두 비트가 같으면 맨체스터 코드가 아님
+			return 0;
+		}
+	}
+#endif
+	if (gpcMC2N[(c>>4)] == 0xF) {
+		return MC_NOT_OK;
+	}
+	if (gpcMC2N[(c&0xF)] == 0xF) {
+		return MC_NOT_OK;
+	}
+	return MC_OK;
+}
+
+UINT8 conv_manchester2nibble(UINT8 c)
+{
+#if 0
+	UINT8 i;
+	UINT8 u8Nibble = 0;
+	for (i=0;i<4;i++) {
+		if (c & 1) {
+			u8Nibble |= 0x80;
+		}
+		c >>= 2;
+		u8Nibble >>= 1;
+	}
+	return u8Nibble;
+#endif
+	return (gpcMC2N[c>>4]<<4) | (gpcMC2N[c&0xF]); 
+}

@@ -110,13 +110,6 @@ UINT8  __xdata gu8UpLinkTxCnt;
 UINT8 __xdata gu8ULTestData = 0;
 UINT8 __xdata gu8RateIdx = 4;
 
-const char __xdata  gpcMCN[] = {// gpcManchesterCodeNibble
-	0xA, // 0,b1010
-	0x9, // 1,b1001
-	0x6, // 2,b0110
-	0x5  // 3,b0101
-};
-
 const char * __xdata  gppcULTestMode[] = {
 	"ULTMODE_INIT",
 	"ULTMODE_PREAMBLE",
@@ -151,52 +144,6 @@ extern UINT8 gu8BNFCnt; // buffer not full
 extern UINT8 gu8BFCnt; // buffer full
 extern UINT8 gu8BNECnt; // buffer not empty
 extern UINT8 gu8BECnt; // buffer empty
-UINT8 conv_nibble2manchester (UINT8 c)
-{
-	/*
-	76e003에서 너무 느림
-	*/
-
-	/*
-	c의 하위 4비트를 
-	맨체스터 코딩함
-	0b00001101 --> 0b01011001
-	0b00000011 --> 0b10100101
-	0b00001110 --> 0b01010110
-	*/
-	UINT8 i;
-	UINT8 u8Manch = 0;
-	for (i=0;i<4;i++) {
-		u8Manch >>=2;
-		if (c&1) {
-			u8Manch |= 0x40; // 1 -> 0
-		}
-		else {
-			u8Manch |= 0x80; // 0 -> 1
-		}
-		c >>= 1;
-	}
-	return u8Manch;
-}
-
-void putchar_manchester (char c) 
-{
-	gu8UART = 1;
-//	putchar(conv_nibble2manchester(c));
-//	putchar(conv_nibble2manchester(c>>4));
-	putchar( (gpcMCN[(c>>6)&0x3]<<4) | gpcMCN[(c>>4)&0x3]);
-	putchar( (gpcMCN[(c>>2)&0x3]<<4) | gpcMCN[(c>>0)&0x3]);
-	gu8UART = 0;
-	return;
-}
-
-void preamble() 
-{
-	gu8UART = 1;
-	putchar(0xF0);
-	gu8UART = 1;
-	return;
-}
 
 enum {
 	STATE_SELF,
@@ -342,46 +289,6 @@ void pin_interrupt_isr(void) interrupt(7)
 	PIF = 0;
 }// void pin_interrupt_isr (void) interrupt(7)
 
-
-UINT8 chk_manchester(UINT8 c)
-{
-	UINT8 i;
-	for (i=0;i<4;i++) {
-		if (((c>>(2*i)) & 1) == ((c>>((2*i+1)))&1)) {
-			// 연속 두 비트가 같으면 맨체스터 코드가 아님
-			return 0;
-		}
-	}
-	return 1;
-}
-
-UINT8 conv_manchester2nibble(UINT8 c)
-{
-	UINT8 i;
-	UINT8 u8Nibble = 0;
-	for (i=0;i<4;i++) {
-		if (c & 1) {
-			u8Nibble |= 0x80;
-		}
-		c >>= 2;
-		u8Nibble >>= 1;
-	}
-	return u8Nibble;
-}
-
-UINT8 conv_manchester2highnibble(UINT8 c)
-{
-	UINT8 i;
-	UINT8 u8Nibble = 0;
-	for (i=0;i<4;i++) {
-		u8Nibble >>= 1;
-		if (c & 1) {
-			u8Nibble |= 0x80;
-		}
-		c >>= 2;
-	}
-	return u8Nibble;
-}
 
 void MODIFY_HIRC_166(void)
 {

@@ -110,48 +110,6 @@ UINT16 gu16TimeCnt = 0;
 
 void InitialUART1_Timer3(UINT32);
 
-UINT8 conv_nibble2manchester (UINT8 c)
-{
-	/*
-	c의 하위 4비트를 
-	맨체스터 코딩함
-	0b00001101 --> 0b01011001
-	0b00000011 --> 0b10100101
-	0b00001110 --> 0b01010110
-	*/
-	UINT8 i;
-	UINT8 u8Manch = 0;
-	for (i=0;i<4;i++) {
-		u8Manch >>=2;
-		if (c&1) {
-			u8Manch |= 0x40; // 1 -> 0
-		}
-		else {
-			u8Manch |= 0x80; // 0 -> 1
-		}
-		c >>= 1;
-	}
-	return u8Manch;
-}
-
-void putchar_manchester (char c) 
-{
-	gu8UART = 1;
-	putchar(conv_nibble2manchester(c));
-	putchar(conv_nibble2manchester(c>>4));
-	return;
-}
-
-void preamble() 
-{
-	gu8UART = 1;
-	putchar(0xF0);
-	putchar(0xF0);
-	putchar(0xF0);
-	putchar(0xF0);
-}
-
-
 enum {
 	STATE_SELF,
 	STATE_CROSS,
@@ -273,47 +231,6 @@ void pin_interrupt_isr(void) interrupt(7)
 	}
 	PIF = 0;
 }// void pin_interrupt_isr (void) interrupt(7)
-
-
-UINT8 chk_manchester(UINT8 c)
-{
-	UINT8 i;
-	for (i=0;i<4;i++) {
-		if (((c>>(2*i)) & 1) == ((c>>((2*i+1)))&1)) {
-			// 연속 두 비트가 같으면 맨체스터 코드가 아님
-			return 0;
-		}
-	}
-	return 1;
-}
-
-UINT8 conv_manchester2nibble(UINT8 c)
-{
-	UINT8 i;
-	UINT8 u8Nibble = 0;
-	for (i=0;i<4;i++) {
-		if (c & 1) {
-			u8Nibble |= 0x80;
-		}
-		c >>= 2;
-		u8Nibble >>= 1;
-	}
-	return u8Nibble;
-}
-
-UINT8 conv_manchester2highnibble(UINT8 c)
-{
-	UINT8 i;
-	UINT8 u8Nibble = 0;
-	for (i=0;i<4;i++) {
-		u8Nibble >>= 1;
-		if (c & 1) {
-			u8Nibble |= 0x80;
-		}
-		c >>= 2;
-	}
-	return u8Nibble;
-}
 
 void MODIFY_HIRC_166(void)
 {

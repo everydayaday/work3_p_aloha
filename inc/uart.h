@@ -3,6 +3,8 @@
 #define __UART_POLLING__
 
 #include "Common.h"
+
+
 void putchar (char c);
 
 void  InitialUART0_Timer1(UINT32 u32Baudrate); //T1M = 1, SMOD = 1
@@ -59,3 +61,10 @@ uint8_t getchar_uart1(uint8_t * apu8Data);
 uint8_t getstr_uart1(uint8_t au8Size, uint8_t * apu8Data);
 #endif
 #endif
+
+#define MC_NOT_OK 	(0)
+#define MC_OK 		(1)
+void preamble();
+void putchar_manchester(char c);
+UINT8 chk_manchester(UINT8 c);
+UINT8 conv_manchester2nibble(UINT8 c);
