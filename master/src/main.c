@@ -1305,8 +1305,11 @@ void main (void)
 				if (u8RxUART1 == 0x55) {
 					putchar_uart0('R');
 				}
-				if (u8RxUART1 == 0x56) {
+				else if (u8RxUART1 == 0x56) {
 					putchar_uart0('T');
+				}
+				else {
+					printf_fast_f("%d\r\n",u8RxUART1);
 				}
 			}
 		}
