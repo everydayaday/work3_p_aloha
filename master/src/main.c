@@ -650,10 +650,13 @@ void make_linefi_payload(UINT32 au32LineFiUpSpeed, UINT8 au8ULTMode, UINT8 au8UL
 
 void print_linefi_uplink_rx(UINT8 auCnt, UINT8 * apuBuf)
 {
-	static UINT8 __xdata i;
+	static UINT8 __xdata su8Cnt = 0;
+	UINT8 __xdata i;
+	printf_fast_f("%d-----------------------\r\n",su8Cnt++);
 	for (i=0;i<auCnt;i++) {
 		printf_fast_f("%d:0x%x\r\n", i, apuBuf[i]);
 	}
+	printf_fast_f("-----------------------\r\n");
 }
 /************************************************************************************************************
  *    Main function 

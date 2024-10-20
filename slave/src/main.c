@@ -87,12 +87,12 @@ __code __at (BASE_ADDRESS) char gpcEEPROM[128] = "";
 #define LINEFI_RATE_IDX	3
 
 uint8 gu8MyAddr;
-uint8 __xdata gu8PPambleDurHNum = 7;
+uint8 __xdata gu8PPambleDurHNum = 2;
 uint8 __xdata gu8PPambleDurLNum = 12;
-uint16 __xdata gu8PPambleNum = 10;
+uint16 __xdata gu8PPambleNum = 1;
 uint8 __xdata gu8LineFiUpRate = 5;
 uint8 __xdata gu8DurMode = 0;
-uint8 __xdata gu8TxCnt = 20;
+uint8 __xdata gu8TxCnt = 8;
 uint8 __xdata gu8DurModeMax = 3;
 
 UINT8 __xdata gpu8Data[20];
@@ -986,12 +986,16 @@ void main (void)
 						case 4 :
 							printf_fast_f("gu8TxCnt\r\n");
 							break;
-						default :
+						case 5 :
+							printf_fast_f("-------------------------------\r\n");
 							printf_fast_f("gu8PPambleDurHNum:%d\r\n",gu8PPambleDurHNum);
 							printf_fast_f("gu8PPambleDurLNum:%d\r\n",gu8PPambleDurLNum);
 							printf_fast_f("gu8PPambleNum:%d\r\n",gu8PPambleNum);
 							printf_fast_f("%lu[%d]\r\n", gpu32UartSpeed[gu8LineFiUpRate],gu8LineFiUpRate);
 							printf_fast_f("gu8TxCnt:%d\r\n",gu8TxCnt);
+							printf_fast_f("-------------------------------\r\n");
+							break;
+						default :
 							gu8DurMode = 0;
 							printf_fast_f("gu8PPambleDurHNum\r\n");
 							break;
@@ -1086,16 +1090,19 @@ void main (void)
 			}
 			else {
 				if (gu8PPambleDurCnt < gu8PPambleDurHNum) {
+					static UINT8 __xdata su8InitCnt = 0;
 					UINT8 i;
+					gu8UART = 1;
 					putchar(0xF0);
 					putchar(0xF0);
 					putchar(0xF0);
 					putchar(0xF0);
 					for (i = 0;i<gu8TxCnt;i++) {
-						putchar_manchester(i);
+						putchar_manchester(i+su8InitCnt++);
 					}
 					gu8OneTime = 1;
 					gu8PPambleDurCnt++;
+					gu8UART = 0;
 				}
 			}
 
