@@ -126,9 +126,8 @@ UINT8 __xdata gpu8RxBuf[16];
 UINT8 __xdata gu8RxBufCnt;
 UINT8 __xdata gu8MCRxBuf; // 맨체스터 코드 버프
 
-//#define LINEFI_DEFAULT_RATE	57600
-#define LINEFI_DEFAULT_RATE	115200
-#define LINEFI_DEFAULT_RATE_IDX	4
+#define LINEFI_DEFAULT_RATE	57600
+#define LINEFI_DEFAULT_RATE_IDX	5
 
 extern UINT8 gu8UART;
 uint16 __xdata gu16TimeCnt;
@@ -651,13 +650,10 @@ void make_linefi_payload(UINT32 au32LineFiUpSpeed, UINT8 au8ULTMode, UINT8 au8UL
 
 void print_linefi_uplink_rx(UINT8 auCnt, UINT8 * apuBuf)
 {
-	UINT8 i;
-	gu8UART = 0;
-	printf_fast_f("---------------\r\n");
+	static UINT8 __xdata i;
 	for (i=0;i<auCnt;i++) {
 		printf_fast_f("%d:0x%x\r\n", i, apuBuf[i]);
 	}
-	gu8UART = 1;
 }
 /************************************************************************************************************
  *    Main function 

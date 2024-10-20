@@ -88,9 +88,9 @@ __code __at (BASE_ADDRESS) char gpcEEPROM[128] = "";
 
 uint8 gu8MyAddr;
 uint8 __xdata gu8DurH = 7;
-uint8 __xdata gu8DurL = 10;
-uint8 __xdata gu8DurTx = 3;
-uint8 __xdata gu8LineFiUpRate = 4;
+uint8 __xdata gu8DurL = 12;
+uint8 __xdata gu8DurTx = 1;
+uint8 __xdata gu8LineFiUpRate = 5;
 uint8 __xdata gu8DurMode = 0;
 uint8 __xdata gu8TxCnt = 20;
 uint8 __xdata gu8DurModeMax = 3;
@@ -1112,22 +1112,22 @@ void main (void)
 							gu8UpLinkTxCnt = 0;
 							gu8UART = 1;
 							//putchar(0x56);
+							putchar(0xF0);
+							putchar(0xF0);
+							putchar(0xF0);
+							putchar(0xF0);
 							for (i = 0;i<gu8TxCnt;i++) {
-								//putchar(0x00);
+								putchar_manchester(i);
 							}
-								putchar(0xF0);
-								putchar(0xF0);
-								putchar(0xF0);
-								putchar(0xF0);
 //								putchar(0x55);
 //								putchar(0x55);
 //								putchar(0x55);
 //								putchar(0x55);
-#if 1
-								putchar_manchester(0x12);
-								putchar_manchester(0x34);
-								putchar_manchester(0x56);
-								putchar_manchester(0x78);
+#if 0
+								putchar_manchester(0x00);
+								putchar_manchester(0x00);
+								putchar_manchester(0xFF);
+								putchar_manchester(0xFF);
 #endif
 							gu8UART = 0;
 							gu8UpLinkTxState = ULTxState_Tx;
