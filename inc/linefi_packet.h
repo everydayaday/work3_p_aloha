@@ -41,6 +41,7 @@ typedef enum {
 
 typedef enum {
 	ULTxState_INIT,
+	ULTxState_START,
 	ULTxState_H,
 	ULTxState_L,
 	ULTxState_Tx,

@@ -87,9 +87,9 @@ __code __at (BASE_ADDRESS) char gpcEEPROM[128] = "";
 #define LINEFI_RATE_IDX	3
 
 uint8 gu8MyAddr;
-uint8 __xdata gu8DurH = 7;
-uint8 __xdata gu8DurL = 12;
-uint8 __xdata gu8DurTx = 1;
+uint8 __xdata gu8PPambleDurHNum = 7;
+uint8 __xdata gu8PPambleDurLNum = 12;
+uint16 __xdata gu8PPambleNum = 10;
 uint8 __xdata gu8LineFiUpRate = 5;
 uint8 __xdata gu8DurMode = 0;
 uint8 __xdata gu8TxCnt = 20;
@@ -106,9 +106,11 @@ enum {
 
 uplink_mode_t __xdata gu8ULTestMode = ULTMODE_INIT;
 uplink_tx_state_t __xdata gu8UpLinkTxState = ULTxState_INIT;
-UINT8  __xdata gu8UpLinkTxCnt;
+UINT8  __xdata gu8PPambleDurCnt;
+UINT16  __xdata gu8PPambleCnt;
 UINT8 __xdata gu8ULTestData = 0;
 UINT8 __xdata gu8RateIdx = 4;
+UINT8 __xdata gu8OneTime;
 
 const char * __xdata  gppcULTestMode[] = {
 	"ULTMODE_INIT",
@@ -970,13 +972,13 @@ void main (void)
 					gu8DurMode ++;
 					switch(gu8DurMode) {
 						case 0 :
-							printf_fast_f("gu8DurH\r\n");
+							printf_fast_f("gu8PPambleDurHNum\r\n");
 							break;
 						case 1 :
-							printf_fast_f("gu8DurL\r\n");
+							printf_fast_f("gu8PPambleDurLNum\r\n");
 							break;
 						case 2 :
-							printf_fast_f("gu8DurTx\r\n");
+							printf_fast_f("gu8PPambleNum\r\n");
 							break;
 						case 3 :
 							printf_fast_f("gu8LineFiUpRate\r\n");
@@ -985,29 +987,29 @@ void main (void)
 							printf_fast_f("gu8TxCnt\r\n");
 							break;
 						default :
-							printf_fast_f("gu8DurH:%d\r\n",gu8DurH);
-							printf_fast_f("gu8DurL:%d\r\n",gu8DurL);
-							printf_fast_f("gu8DurTx:%d\r\n",gu8DurTx);
+							printf_fast_f("gu8PPambleDurHNum:%d\r\n",gu8PPambleDurHNum);
+							printf_fast_f("gu8PPambleDurLNum:%d\r\n",gu8PPambleDurLNum);
+							printf_fast_f("gu8PPambleNum:%d\r\n",gu8PPambleNum);
 							printf_fast_f("%lu[%d]\r\n", gpu32UartSpeed[gu8LineFiUpRate],gu8LineFiUpRate);
 							printf_fast_f("gu8TxCnt:%d\r\n",gu8TxCnt);
 							gu8DurMode = 0;
-							printf_fast_f("gu8DurH\r\n");
+							printf_fast_f("gu8PPambleDurHNum\r\n");
 							break;
 					}
 					break;
 				case '+' :
 					switch(gu8DurMode) {
 						case 0 :
-							gu8DurH ++;
-							printf_fast_f("gu8DurH:%d\r\n",gu8DurH);
+							gu8PPambleDurHNum ++;
+							printf_fast_f("gu8PPambleDurHNum:%d\r\n",gu8PPambleDurHNum);
 							break;
 						case 1 :
-							gu8DurL ++;
-							printf_fast_f("gu8DurL:%d\r\n",gu8DurL);
+							gu8PPambleDurLNum ++;
+							printf_fast_f("gu8PPambleDurLNum:%d\r\n",gu8PPambleDurLNum);
 							break;
 						case 2 :
-							gu8DurTx ++;
-							printf_fast_f("gu8DurTx:%d\r\n",gu8DurTx);
+							gu8PPambleNum ++;
+							printf_fast_f("gu8PPambleNum:%d\r\n",gu8PPambleNum);
 							break;
 						case 3 :
 							printf_fast_f("%lu\r\n", gpu32UartSpeed[++gu8LineFiUpRate]);
@@ -1022,16 +1024,16 @@ void main (void)
 				case '-' :
 					switch(gu8DurMode) {
 						case 0 :
-							gu8DurH --;
-							printf_fast_f("gu8DurH:%d\r\n",gu8DurH);
+							gu8PPambleDurHNum --;
+							printf_fast_f("gu8PPambleDurHNum:%d\r\n",gu8PPambleDurHNum);
 							break;
 						case 1 :
-							gu8DurL --;
-							printf_fast_f("gu8DurL:%d\r\n",gu8DurL);
+							gu8PPambleDurLNum --;
+							printf_fast_f("gu8PPambleDurLNum:%d\r\n",gu8PPambleDurLNum);
 							break;
 						case 2 :
-							gu8DurTx --;
-							printf_fast_f("gu8DurTx:%d\r\n",gu8DurTx);
+							gu8PPambleNum --;
+							printf_fast_f("gu8PPambleNum:%d\r\n",gu8PPambleNum);
 							break;
 						case 3 :
 							printf_fast_f("%lu\r\n", gpu32UartSpeed[--gu8LineFiUpRate]);
@@ -1050,8 +1052,13 @@ void main (void)
 			gu8UART = 0;
 			printf_fast_f("SWITCH:%d\n\r", SWITCH);
 			if (SWITCH) { //눌렸을 때
+				gu8PPambleCnt = 0;
+				gu8PPambleDurCnt = 0;
+				gu8UpLinkTxState = ULTxState_START;
+				gu8OneTime = 0;
 			}
 			else { //떨어질 때
+				gu8UpLinkTxState = ULTxState_INIT;
 				//InitialUART1_Timer3(115200);
 				//InitialUART1_Timer3(57600);
 				gu8UART = 0;
@@ -1073,6 +1080,64 @@ void main (void)
 			u8PrevSwitch = SWITCH;
 		} //if (u8PrevSwitch != SWITCH)
 		if (SWITCH) {
+			if (gu8PPambleCnt < gu8PPambleNum) {
+				TOGGLE(UART_TX);
+				gu8PPambleCnt++;
+			}
+			else {
+				if (gu8PPambleDurCnt < gu8PPambleDurHNum) {
+					UINT8 i;
+					putchar(0xF0);
+					putchar(0xF0);
+					putchar(0xF0);
+					putchar(0xF0);
+					for (i = 0;i<gu8TxCnt;i++) {
+						putchar_manchester(i);
+					}
+					gu8OneTime = 1;
+					gu8PPambleDurCnt++;
+				}
+			}
+
+#if 0
+		switch(gu8UpLinkTxState) {
+			case ULTxState_INIT :
+				break;
+			case ULTxState_START :
+				gu8UpLinkTxState = ULTxState_L;
+				UART_TX = 0;
+				gu8PPambleDurCnt = 0;
+				gu8PPambleCnt = 0;
+				break;
+			case ULTxState_H :
+				if (gu8PPambleDurCnt == gu8PPambleDurHNum) {
+					gu8PPambleCnt ++;
+					gu8PPambleDurCnt = 0;
+					UART_TX = 0;
+					gu8UpLinkTxState = ULTxState_L;
+				}
+				break;
+			case ULTxState_L :
+				if (gu8PPambleDurCnt == gu8PPambleDurLNum) {
+					gu8PPambleDurCnt = 0;
+					gu8UpLinkTxState = ULTxState_H;
+					UART_TX = 1;
+					if (gu8PPambleCnt == gu8PPambleNum) {
+						gu8UART = 0; 
+						printf_fast_f("gu8PPambleCnt:%d\r\n",gu8PPambleCnt);
+						gu8UART = 1; 
+					}
+				}
+				else {
+					gu8PPambleDurCnt++;
+				}
+				break;
+			case ULTxState_NONE :
+				break;
+		} //switch(gu8UpLinkTxState)
+#endif
+
+
 #if 1 // 상향 신호
 #if 0
 //			TOGGLE(UART_TX);
@@ -1089,79 +1154,6 @@ void main (void)
 			gu8ULTestMode = ULTMODE_INIT;
 
 
-			switch(gu8UpLinkTxState) {
-				case ULTxState_INIT :
-					gu8UpLinkTxState = ULTxState_L;
-					UART_TX = 0;
-					gu8UpLinkTxCnt = 0;
-					break;
-				case ULTxState_Tx :
-					if (gu8UpLinkTxCnt == gu8DurTx) {
-						gu8UpLinkTxState = ULTxState_L;
-						UART_TX = 0;
-					}
-					else {
-						gu8UpLinkTxCnt++;
-					}
-					break;
-				case ULTxState_H :
-					if (gu8UpLinkTxCnt == gu8DurH) {
-#if 1
-						if (gu8DurTx) {
-							UINT8 i;
-							gu8UpLinkTxCnt = 0;
-							gu8UART = 1;
-							//putchar(0x56);
-							putchar(0xF0);
-							putchar(0xF0);
-							putchar(0xF0);
-							putchar(0xF0);
-							for (i = 0;i<gu8TxCnt;i++) {
-								putchar_manchester(i);
-							}
-//								putchar(0x55);
-//								putchar(0x55);
-//								putchar(0x55);
-//								putchar(0x55);
-#if 0
-								putchar_manchester(0x00);
-								putchar_manchester(0x00);
-								putchar_manchester(0xFF);
-								putchar_manchester(0xFF);
-#endif
-							gu8UART = 0;
-							gu8UpLinkTxState = ULTxState_Tx;
-						}
-						else { // gu8DurTx == 0
-							gu8UpLinkTxCnt = 0;
-							UART_TX = 0;
-							gu8UpLinkTxState = ULTxState_L;
-						}
-#endif
-#if 0
-						gu8UpLinkTxCnt = 0;
-						UART_TX = 0;
-						gu8UpLinkTxState = ULTxState_L;
-#endif
-					}
-					else {
-						gu8UpLinkTxCnt++;
-					}
-					break;
-				case ULTxState_L :
-					if (gu8UpLinkTxCnt == gu8DurL) {
-						gu8UpLinkTxCnt = 0;
-						gu8UpLinkTxState = ULTxState_H;
-						UART_TX = 1;
-					}
-					else {
-						gu8UpLinkTxCnt++;
-					}
-					break;
-				case ULTxState_NONE :
-					break;
-			} //switch(gu8UpLinkTxState)
-
 #endif
 #if 0
 			gu8UART = 1;
@@ -1177,7 +1169,6 @@ void main (void)
 #endif
 		} //if (SWITCH)
 		else {
-			gu8UpLinkTxState = ULTxState_INIT;
 			switch(gu8ULTestMode) {
 				case ULTMODE_INIT:
 					break;
@@ -1268,6 +1259,60 @@ void main (void)
 			u8StateRxPkt = STATE_RxPKT_INIT;
 			break;
 		} //switch(u8StateRxPkt)
+#if 0
+		switch(gu8UpLinkTxState) {
+			case ULTxState_INIT :
+				break;
+			case ULTxState_START :
+				gu8UpLinkTxState = ULTxState_L;
+				UART_TX = 0;
+				gu8PPambleDurCnt = 0;
+				gu8PPambleCnt = 0;
+				break;
+			case ULTxState_H :
+				if (gu8PPambleCnt == gu8PPambleNum) {
+#if 1
+					UINT8 i;
+					gu8PPambleDurCnt = 0;
+					gu8UART = 1;
+					//putchar(0x56);
+					putchar(0xF0);
+					putchar(0xF0);
+					putchar(0xF0);
+					putchar(0xF0);
+					for (i = 0;i<gu8TxCnt;i++) {
+						putchar_manchester(i);
+					}
+#endif
+					gu8UpLinkTxState = ULTxState_INIT;
+				}
+				else if (gu8PPambleDurCnt == gu8PPambleDurHNum) {
+					gu8PPambleCnt ++;
+					gu8PPambleDurCnt = 0;
+					UART_TX = 0;
+					gu8UpLinkTxState = ULTxState_L;
+				}
+				break;
+			case ULTxState_L :
+				if (gu8PPambleDurCnt == gu8PPambleDurLNum) {
+					gu8PPambleDurCnt = 0;
+					gu8UpLinkTxState = ULTxState_H;
+					UART_TX = 1;
+					if (gu8PPambleCnt == gu8PPambleNum) {
+						gu8UART = 0; 
+						printf_fast_f("gu8PPambleCnt:%d\r\n",gu8PPambleCnt);
+						gu8UART = 1; 
+					}
+				}
+				else {
+					gu8PPambleDurCnt++;
+				}
+				break;
+			case ULTxState_NONE :
+				break;
+		} //switch(gu8UpLinkTxState)
+#endif
+
 
 	} //while(1)
 }
