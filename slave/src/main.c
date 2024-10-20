@@ -90,7 +90,7 @@ uint8 gu8MyAddr;
 uint8 __xdata gu8PPambleDurHNum = 2;
 uint8 __xdata gu8PPambleDurLNum = 12;
 uint16 __xdata gu8PPambleNum = 1;
-uint8 __xdata gu8LineFiUpRate = 5;
+uint8 __xdata gu8LineFiUpRate = 5; // 라인파이 상향 속도: 230400bps 이것으로 맨코해서 보내면, 실제 데이타 속도는 115200
 uint8 __xdata gu8DurMode = 0;
 uint8 __xdata gu8TxCnt = 8;
 uint8 __xdata gu8DurModeMax = 3;
@@ -110,7 +110,6 @@ UINT8  __xdata gu8PPambleDurCnt;
 UINT16  __xdata gu8PPambleCnt;
 UINT8 __xdata gu8ULTestData = 0;
 UINT8 __xdata gu8RateIdx = 4;
-UINT8 __xdata gu8OneTime;
 
 const char * __xdata  gppcULTestMode[] = {
 	"ULTMODE_INIT",
@@ -1058,8 +1057,6 @@ void main (void)
 			if (SWITCH) { //눌렸을 때
 				gu8PPambleCnt = 0;
 				gu8PPambleDurCnt = 0;
-				gu8UpLinkTxState = ULTxState_START;
-				gu8OneTime = 0;
 			}
 			else { //떨어질 때
 				gu8UpLinkTxState = ULTxState_INIT;
@@ -1083,6 +1080,7 @@ void main (void)
 			}
 			u8PrevSwitch = SWITCH;
 		} //if (u8PrevSwitch != SWITCH)
+
 		if (SWITCH) {
 			if (gu8PPambleCnt < gu8PPambleNum) {
 				TOGGLE(UART_TX);
@@ -1098,9 +1096,10 @@ void main (void)
 					putchar(0xF0);
 					putchar(0xF0);
 					for (i = 0;i<gu8TxCnt;i++) {
-						putchar_manchester(i+su8InitCnt++);
+						//putchar_manchester(i+su8InitCnt++);
+						putchar(i + su8InitCnt);
 					}
-					gu8OneTime = 1;
+					su8InitCnt++;
 					gu8PPambleDurCnt++;
 					gu8UART = 0;
 				}
@@ -1175,6 +1174,7 @@ void main (void)
 			putchar(0x0);
 #endif
 		} //if (SWITCH)
+
 		else {
 			switch(gu8ULTestMode) {
 				case ULTMODE_INIT:

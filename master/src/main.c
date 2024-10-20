@@ -86,8 +86,9 @@ typedef enum {
 
 typedef enum {
 	LFURxState_INIT,,
+	LFURxState_PPAMBLE, // Pre Pre Abmle
 	LFURxState_PREAMBLE,
-	LFURxState_RX,
+	LFURxState_RX,  // 맨코가 아닌, 보통 데이타
 	LFURxState_RX_MCH, // 맨체스터 코드 하이 니블
 	LFURxState_RX_MCL, // 맨체스터 코드 로우 니블
 	LFURxState_CRC,
@@ -1287,17 +1288,26 @@ void main (void)
 			if (getchar_uart1(&u8RxUART1)) { // 라인파이 상향 수신
 				switch(gu8LineFiUpRxState) {
 					case LFURxState_INIT :
+						if (u8RxUART1 == 0x00) {
+							// 프리프리앰블 수신하면,  프리앰을 시작 상태 천이
+							gu8LineFiUpRxState = LFURxState_PPAMBLE;
+						}
+						break;
+					case LFURxState_PPAMBLE : // 프리프리앰블 상태..
 						if (u8RxUART1 == 0xF0) {
 							// 프리앰블 수신하면,  프리앰을 시작 상태 천이
 							gu8LineFiUpRxState = LFURxState_PREAMBLE;
 						}
 						break;
+
+
 					case LFURxState_PREAMBLE : //프리앰블 받은 상태
 						if (u8RxUART1 == 0xF0) {
 							// 계속 프리앰블이면, 기다림
 							//gu8LineFiUpRxState = LFURxState_PREAMBLE;
 
 						}
+#if 0
 						else if (chk_manchester(u8RxUART1) == MC_OK) {
 							// 맨체스터 코드이면, 하이니블 맨코(맨체스터 코드)로 인식하고 상태천이
 							gu8LineFiUpRxState = LFURxState_RX_MCH;
@@ -1306,6 +1316,21 @@ void main (void)
 						}
 						else {
 							// 프리앰블도 아니고 맨체스터 코드도 아니면 초기화
+							gu8LineFiUpRxState = LFURxState_INIT;
+						}
+#else
+						else {
+							gu8LineFiUpRxState = LFURxState_RX;
+							gu8RxBufCnt = 0;
+							gpu8RxBuf[gu8RxBufCnt++] = u8RxUART1;
+						}
+
+#endif
+						break;
+					case LFURxState_RX :
+						gpu8RxBuf[gu8RxBufCnt++] = u8RxUART1;
+						if (gu8RxBufCnt == 8) {
+							print_linefi_uplink_rx(gu8RxBufCnt, gpu8RxBuf);
 							gu8LineFiUpRxState = LFURxState_INIT;
 						}
 						break;
@@ -1338,7 +1363,7 @@ void main (void)
 						break;
 					case LFURxState_CRC :
 						break;
-				}
+				} //switch(gu8LineFiUpRxState)
 #if 0
 				if (u8RxUART1 == 0x55) {
 					putchar_uart0('R');
