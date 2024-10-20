@@ -14,14 +14,14 @@ UINT8 __xdata gu8BFCnt = 0;
 UINT8 __xdata gu8BNECnt = 0;
 UINT8 __xdata gu8BECnt = 0;
 
-const char __xdata  gpcN2MC[] = {// Nibble to Manchester Code
+const char __xdata  gpc2B2MC[] = {// 2Bits to Manchester Code
 	0xA, // 0,b1010
 	0x9, // 1,b1001
 	0x6, // 2,b0110
 	0x5  // 3,b0101
 };
 
-const char __xdata  gpcMC2N[16] = {// nibble to manchester code
+const char __xdata  gpcMC22B[16] = {// manchester code to 2Bits
 	0xF,// 0 MC error
 	0xF,// 1 MC error
 	0xF,// 2 MC error
@@ -716,8 +716,8 @@ void preamble()
 void putchar_manchester(char c) 
 {
 	gu8UART = 1;
-	putchar( (gpcN2MC[(c>>6)&0x3]<<4) | gpcN2MC[(c>>4)&0x3]);
-	putchar( (gpcN2MC[(c>>2)&0x3]<<4) | gpcN2MC[(c>>0)&0x3]);
+	putchar( (gpc2B2MC[(c>>6)&0x3]<<4) | gpc2B2MC[(c>>4)&0x3]);
+	putchar( (gpc2B2MC[(c>>2)&0x3]<<4) | gpc2B2MC[(c>>0)&0x3]);
 	return;
 }
 
@@ -735,10 +735,10 @@ UINT8 chk_manchester(UINT8 c)
 		}
 	}
 #endif
-	if (gpcMC2N[(c>>4)] == 0xF) {
+	if (gpcMC22B[(c>>4)] == 0xF) {
 		return MC_NOT_OK;
 	}
-	if (gpcMC2N[(c&0xF)] == 0xF) {
+	if (gpcMC22B[(c&0xF)] == 0xF) {
 		return MC_NOT_OK;
 	}
 	return MC_OK;
@@ -758,5 +758,5 @@ UINT8 conv_manchester2nibble(UINT8 c)
 	}
 	return u8Nibble;
 #endif
-	return (gpcMC2N[c>>4]<<4) | (gpcMC2N[c&0xF]); 
+	return (gpcMC22B[c>>4]<<2) | (gpcMC22B[c&0xF]); 
 }
