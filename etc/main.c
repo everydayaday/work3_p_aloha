@@ -634,20 +634,32 @@ enum {
 	LFURxState_CRC4,
 	LFURxState_END4
 };
-void start_aloha(linefi_packet_t * apcStr) 
+
+#if 1
+void periodic_func(linefi_packet_t * apcStr)
 {
-	apcStr->u8Type = 100;
-	add_crc_linefi_packet_packet(apcStr);
+	// static UINT8 __xdata su8Cnt = 0;
+	// apcStr->u8Ver = su8Cnt++;
+	// static UINT8 __xdata slave_addr = 0;
+	// slave_addr = apcStr->u8Addr;
+	UINT8 __xdata slave_addr = apcStr->u8Addr;
+	
 	send_linefi_packet(apcStr);
+	if (slave_addr < 3) {
+		apcStr->pu8Data[slave_addr] += 1;
+		printf_fast_f("\r\nDL to %d\r\n", slave_addr);
+		apcStr->u8Addr++;
+		
+	}
+	else if (slave_addr == 3) {
+		apcStr->pu8Data[slave_addr] += 1;
+		printf_fast_f("\r\nDL to %d\r\n", slave_addr);
+		apcStr->u8Addr = 1;
+	}
+	// printf_fast_f("%d\r\n", su8Cnt++);
+	// printf_fast_f("%s\r\n", apcStr);
 }
-void send_ACK(linefi_packet_t * received_apcStr, linefi_packet_t * send_apcStr)
-{
-	UINT8 __xdata slave_addr = received_apcStr->u8Addr;
-	send_apcStr->u8Ver = received_apcStr->u8Ver;
-	send_apcStr->u8Addr = slave_addr;
-	add_crc_linefi_packet_packet(send_apcStr);
-	send_linefi_packet(send_apcStr);
-}
+#endif
 
 void make_linefi_payload(UINT32 au32LineFiUpSpeed, UINT8 au8ULTMode, UINT8 au8ULTData, UINT8 *apu8Data)
 {
@@ -661,7 +673,7 @@ void make_linefi_payload(UINT32 au32LineFiUpSpeed, UINT8 au8ULTMode, UINT8 au8UL
 	apu8Data[3] = au8ULTMode;
 	apu8Data[4] = au8ULTData;
 }
-#if 0
+
 void print_linefi_uplink_rx(UINT8 auCnt, UINT8 * apuBuf, UINT8 aucCnt1, UINT8 aucCnt2)
 {
 	// static UINT8 __xdata su8Cnt = 0;
@@ -670,17 +682,14 @@ void print_linefi_uplink_rx(UINT8 auCnt, UINT8 * apuBuf, UINT8 aucCnt1, UINT8 au
 	uplink_CNT = apuBuf[0]; 
 	uplink_addr = apuBuf[2];
 	UINT8 __xdata i;
-	printf_fast_f("Slave_ADDR: %d, UL_Packet_num: %d\r\n",uplink_addr, uplink_CNT);
+	printf_fast_f("Slave_ADDR: %d, UL_Packet_num: %d-----------------------\r\n",uplink_addr, uplink_CNT);
 	// printf_fast_f("%d-----------------------\r\n",su8Cnt++);
 	printf_fast_f("PPamble Cnt:%d,Preamble Cnt:%d\r\n",aucCnt1, aucCnt2);
-	
 	for (i=0;i<auCnt;i++) {
 		printf_fast_f("%d:0x%x\r\n", i, apuBuf[i]);
 	}
-	
-	// printf_fast_f("-----------------------\r\n");
+	printf_fast_f("-----------------------\r\n");
 }
-#endif
 /************************************************************************************************************
  *    Main function 
  ************************************************************************************************************/
@@ -719,17 +728,18 @@ void main (void)
 
 	linefi_packet_t __xdata stLineFiPkt_test = { // For sending periodic packet
 		1, //UINT8 u8Ver;
-		7, //UINT8 u8Type;
+		2, //UINT8 u8Type;
 		1, //UINT8 u8Addr;
 		16, //UINT8 u8Size;
-		255, //UINT8 u8CRC;
+		5, //UINT8 u8CRC;
 		gpu8Data2 //UINT8 * pu8Data;
-	};	
+	};
+
 	linefi_packet_t __xdata stLineFiPkt = {
 		1, //UINT8 u8Ver;
-		100, //UINT8 u8Type;
-		1, //UINT8 u8Addr;
-		16, //UINT8 u8Size;
+		2, //UINT8 u8Type;
+		3, //UINT8 u8Addr;
+		10, //UINT8 u8Size;
 		5, //UINT8 u8CRC;
 		gpu8Data //UINT8 * pu8Data;
 	};
@@ -1295,29 +1305,35 @@ void main (void)
 		}
 #endif
 		switch(u8StatePeriodicSend) {
-			case STATE_PS_INIT : // 초기 시스템 시작
+			case STATE_PS_INIT :
 				if (u8PSCmd == CMD_PS_START) {
-					u8StatePeriodicSend = STATE_PS_WAITING;
+					u8StatePeriodicSend = STATE_PS_SENDING;
 					gu16TimeCntMilliSec = 0;
-					start_aloha(&stLineFiPkt);
-					printf_fast_f("starting ALOHA...\r\n");
+					// global_gu16TimeCnt = 0;
+					printf_fast_f("starting...\r\n");
 				}
 				break;
-			case STATE_PS_SENDING : // ACK 보내기
-				//gu16TimeCntMilliSec = 0;
-				u8StatePeriodicSend = STATE_PS_WAITING;				
+			case STATE_PS_SENDING :
+				gu16TimeCntMilliSec = 0;
+				periodic_func(&stLineFiPkt_test);
+				u8StatePeriodicSend = STATE_PS_WAITING;
+				// if (gu16TimeCntMilliSec > 1000) {
+				// 	gu16TimeCntMilliSec = 0;
+				// 	periodic_func(&stLineFiPkt_test);
+				// 	u8StatePeriodicSend = STATE_PS_WAITING;
+				// }
 				if (u8PSCmd == CMD_PS_END) {
 					u8StatePeriodicSend = STATE_PS_INIT;
-					printf_fast_f("stopping ALOHA...");
+					printf_fast_f("stopping...");
 				}
 				break;
-			case STATE_PS_WAITING : // 데이터 수신 대기 				
+			case STATE_PS_WAITING : 
+				
 				if (getchar_uart1(&u8RxUART1)) { // 라인파이 상향 수신
 					switch(gu8LineFiUpRxState4) {
 						case LFURxState_INIT4 :
 							if (u8RxUART1 == 0x00) {
 								// 프리프리앰블 수신하면,  프리앰을 시작 상태 천이
-								gu16TimeCntMilliSec = 0;
 								gu8LineFiUpRxState4 = LFURxState_PPAMBLE4;
 								gu8PPambleCnt = 1;
 							}
@@ -1330,64 +1346,42 @@ void main (void)
 							}
 							else {
 								gu8PPambleCnt++;
-							}							
+							}
 							break;
-						case LFURxState_PREAMBLE4 : //프리앰블 받은 상태												
+						case LFURxState_PREAMBLE4 : //프리앰블 받은 상태
 							if (u8RxUART1 == 0xF0) {
 								// 계속 프리앰블이면, 기다림
 								// gu8LineFiUpRxState = LFURxState_PREAMBLE;
 								gu8PreambleCnt ++;
-								gu16TimeCntMilliSec = 0;
 							}
-							else if (gu8PreambleCnt == 3) { // 프리앰블이 정확히 5개일때,
+							else if (gu8PreambleCnt == 5) { // 프리앰블이 정확히 5개일때,
 								gu8LineFiUpRxState4 = LFURxState_RX4;
 								gu8RxBufCnt = 0;
 								gpu8RxBuf[gu8RxBufCnt++] = u8RxUART1;
-								gu16TimeCntMilliSec = 0;
 							}
 							else { //프리앰블 개수가 5개 이하 일 때,
 								gu8LineFiUpRxState4 = LFURxState_RX4;
 								// gu8LineFiUpRxState4 = LFURxState_INIT4;
 							}
-							if (gu16TimeCntMilliSec > 1000) { // 잘못된 프리앰블
-								printf_fast_f("1000 ");
-								gu8LineFiUpRxState4 = LFURxState_INIT4;
-								gu16TimeCntMilliSec = 0;
-							}
 							break;
 						case LFURxState_RX4 :
 							gpu8RxBuf[gu8RxBufCnt++] = u8RxUART1;
-							
-							if (gu8RxBufCnt == 11) {
-																								
-								//print_linefi_uplink_rx(gu8RxBufCnt, gpu8RxBuf, gu8PPambleCnt, gu8PreambleCnt);								
-								if (gpu8RxBuf[2] < 10) {
-																		
-									cp_buf2linefipacket(gu8RxBufCnt, gpu8RxBuf, &stLineFiPkt);									
-									//printf_fast_f("--%d--",chk_crc_linefi_packet_packet(&stLineFiPkt));
-									//if (chk_crc_linefi_packet_packet(&stLineFiPkt) == 1) {
-									
-									printf_fast_f("Slave_ADDR: %d, UL_Packet_num: %d\r\n",gpu8RxBuf[2], gpu8RxBuf[0]);
-									print_linefipacket(&stLineFiPkt);
-									send_ACK(&stLineFiPkt, &stLineFiPkt_test);
-									//}
-								}
-								printf_fast_f("\r\n\r\n");
-								gu8RxBufCnt = 0;
+							if (gu8RxBufCnt == 16) {
+								print_linefi_uplink_rx(gu8RxBufCnt, gpu8RxBuf, gu8PPambleCnt, gu8PreambleCnt);
 								gu8LineFiUpRxState4 = LFURxState_INIT4;
 								u8StatePeriodicSend = STATE_PS_SENDING;
-							}
-							if (gu16TimeCntMilliSec > 3000) { 
-								gu8LineFiUpRxState4 = LFURxState_INIT4;
-								gu16TimeCntMilliSec = 0;
-								gu8RxBufCnt = 0;
-							}
-														
+							}							
 							break;
 						//u8StatePeriodicSend = STATE_PS_SENDING;
 					}
 				}
-				
+				if (gu16TimeCntMilliSec > 1000) {
+					printf_fast_f("Uplink timeout, retransmitting...\r\n");
+					gu8RxBufCnt = 0;
+					u8StatePeriodicSend = STATE_PS_SENDING;  // 타임아웃 후 다시 송신 시도
+					gu8LineFiUpRxState4 = LFURxState_INIT4;  // 프리앰블 상태 초기화
+					gu16TimeCntMilliSec = 0;
+				}
 				if (u8PSCmd == CMD_PS_END) {
 					gu8RxBufCnt = 0;
 					u8StatePeriodicSend = STATE_PS_INIT;

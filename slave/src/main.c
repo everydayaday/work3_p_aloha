@@ -87,7 +87,7 @@ __code __at (BASE_ADDRESS) char gpcEEPROM[128] = "";
 #define LINEFI_RATE_IDX	3
 
 uint8 gu8MyAddr;
-uint8 __xdata gu8PPambleDurHNum = 2;
+uint8 __xdata gu8PPambleDurHNum = 1;
 uint8 __xdata gu8PPambleDurLNum = 12;
 uint16 __xdata gu8PPambleNum = 1;
 uint8 __xdata gu8LineFiUpRate = 5; // 라인파이 상향 속도: 230400bps 이것으로 맨코해서 보내면, 실제 데이타 속도는 115200
@@ -96,6 +96,8 @@ uint8 __xdata gu8TxCnt = 8;
 uint8 __xdata gu8DurModeMax = 3;
 
 UINT8 __xdata gpu8Data[20];
+UINT8 __xdata gpu8Data2[20];
+
 UINT8 __xdata gu8MotorState = 0;
 enum {
 	STATE_MOTOR_STOP1,
@@ -111,6 +113,15 @@ UINT16  __xdata gu8PPambleCnt;
 UINT8 __xdata gu8ULTestData = 0;
 UINT8 __xdata gu8RateIdx = 4;
 
+UINT8 __xdata gpu8Data2[20] = {
+	//165,165,170,170, // 165
+	//10,165,1,1,
+	1,2,3,4,
+	5,6,7,8,
+	4,4,4,4,
+	3,3,3,3,
+	5,5,5,5,
+};
 const char * __xdata  gppcULTestMode[] = {
 	"ULTMODE_INIT",
 	"ULTMODE_PREAMBLE",
@@ -165,9 +176,11 @@ enum { // Voltage Polarity Modulation
 	STATE_RxPKT_INIT,
 	STATE_RxPKT_START,
 	STATE_RxPKT_END,
-	STATE_RxPKT_A,
-	STATE_RxPKT_B,
-	STATE_RxPKT_NONE
+	STATE_ULPKT_GEN,
+	STATE_ULPKT_SEND,
+	STATE_ACK_WAIT, //5
+	STATE_BKOFF, //6
+	STATE_ACK_PROCESS  
 };
 
 enum { // Current Amplitude Modulation
@@ -785,7 +798,9 @@ void main (void)
 	UINT8 u8StateTxPkt = STATE_TxPKT_INIT;
 
 	UINT8 __xdata pu8RxUART[30];
-
+	UINT32 __xdata pktGenTime = 0;
+	UINT32 __xdata backoffTimer = 0;
+	static UINT8 __xdata su8Cnt = 1;
 	linefi_packet_t stLineFiPkt = {
 		1, //UINT8 u8Ver;
 		2, //UINT8 u8Type;
@@ -794,7 +809,23 @@ void main (void)
 		5, //UINT8 u8CRC;
 		gpu8Data //UINT8 * pu8Data;
 	};
-
+	
+	linefi_packet_t stLineFiPkt2 = {
+		1, //UINT8 u8Ver;
+		2, //UINT8 u8Type;
+		3, //UINT8 u8Addr;
+		4, //UINT8 u8Size;
+		5, //UINT8 u8CRC;
+		gpu8Data2 //UINT8 * pu8Data;
+	};
+	linefi_packet_t stLineFiPkt_UL = {
+		1, //UINT8 u8Ver;
+		3, //UINT8 u8Type;
+		MY_ADDR, //UINT8 u8Addr;
+		11, //UINT8 u8Size;
+		255, //UINT8 u8CRC;
+		gpu8Data2 //UINT8 * pu8Data;
+	};
 	//	uint8 u8MotorRotCmd;
 	uint8 u8MotorState = MS_STOP;
 
@@ -1102,8 +1133,14 @@ void main (void)
 					putchar(0xF0);
 					putchar(0xF0);
 					for (i = 0;i<gu8TxCnt;i++) {
-						//putchar_manchester(i+su8InitCnt++);
-						putchar(i + su8InitCnt);
+						//putchar_manchester(i+su8InitCnt++);					
+						//putchar(i + su8InitCnt);
+						if (i == 2) {
+							putchar(MY_ADDR);
+						}
+						else {
+							putchar(i + su8InitCnt);
+						}
 					}
 					su8InitCnt++;
 					gu8PPambleDurCnt++;
@@ -1112,74 +1149,11 @@ void main (void)
 				}
 			}
 
-#if 0
-		switch(gu8UpLinkTxState) {
-			case ULTxState_INIT :
-				break;
-			case ULTxState_START :
-				gu8UpLinkTxState = ULTxState_L;
-				UART_TX = 0;
-				gu8PPambleDurCnt = 0;
-				gu8PPambleCnt = 0;
-				break;
-			case ULTxState_H :
-				if (gu8PPambleDurCnt == gu8PPambleDurHNum) {
-					gu8PPambleCnt ++;
-					gu8PPambleDurCnt = 0;
-					UART_TX = 0;
-					gu8UpLinkTxState = ULTxState_L;
-				}
-				break;
-			case ULTxState_L :
-				if (gu8PPambleDurCnt == gu8PPambleDurLNum) {
-					gu8PPambleDurCnt = 0;
-					gu8UpLinkTxState = ULTxState_H;
-					UART_TX = 1;
-					if (gu8PPambleCnt == gu8PPambleNum) {
-						gu8UART = 0; 
-						printf_fast_f("gu8PPambleCnt:%d\r\n",gu8PPambleCnt);
-						gu8UART = 1; 
-					}
-				}
-				else {
-					gu8PPambleDurCnt++;
-				}
-				break;
-			case ULTxState_NONE :
-				break;
-		} //switch(gu8UpLinkTxState)
-#endif
-
-
 #if 1 // 상향 신호
-#if 0
-//			TOGGLE(UART_TX);
-			preamble();
-			preamble();
-			putchar_manchester(0x55);
-			putchar_manchester(0x55);
-			putchar_manchester(0x55);
-			putchar_manchester(0x55);
-			putchar_manchester(0x55);
-			putchar_manchester(0x55);
-//			putchar_manchester('0');
-#endif
 			gu8ULTestMode = ULTMODE_INIT;
 
+#endif
 
-#endif
-#if 0
-			gu8UART = 1;
-			UART_TX = 1;
-			putchar(0x0);
-			putchar(0x0);
-			putchar(0x0);
-			putchar(0x0);
-			putchar(0x0);
-			putchar(0x0);
-			putchar(0x0);
-			putchar(0x0);
-#endif
 		} //if (SWITCH)
 
 		else {
@@ -1206,127 +1180,266 @@ void main (void)
 //			u8UartRx = UART_RX;
 		}
 #endif
-		switch(u8StateRxPkt) {
+		switch(u8StateRxPkt) { // 수신 시
 			case STATE_RxPKT_INIT :
 				if (get_octet_from_linefi(&u8RxUART)) {
 					gu16TimeCnt = 0;
 					u8RxBufIdx = 0;
 					pu8RxUART[u8RxBufIdx++] = u8RxUART;
+					gu8UART = 0;
+					gu8PPambleCnt = 0;
+					gu8PPambleDurCnt = 0;
+				
 					u8StateRxPkt = STATE_RxPKT_START;
-				}
-			break;
+				}					
+				break;
 			case STATE_RxPKT_START :
 				if (get_octet_from_linefi(&u8RxUART)) {
 					gpu16RxTime[u8RxBufIdx-1] = gu16TimeCnt;
 					gu16TimeCnt = 0;
 					pu8RxUART[u8RxBufIdx++] = u8RxUART;
 				}
-				else if (gu16TimeCnt > 10000) { //
+				else if (gu16TimeCnt > 1000) { //
 					u8RxLFPLen = u8RxBufIdx;
 					u8StateRxPkt = STATE_RxPKT_END;
 				}
-			break;
+				break;
+			case STATE_ULPKT_GEN : 				
+				if (pktGenTime == 0) {
+					u8StateRxPkt = STATE_ULPKT_SEND;
+					// gu8UART = 1;
+					// putchar(0x00); //prepreamble
+					// putchar(0x00);
+					// putchar(0xF0); // preamble 
+					// putchar(0xF0);
+					// putchar(0xF0);
 
-			case STATE_RxPKT_END :
-			printf_fast_f("\r\nRx SIZE:%d\n\r", u8RxLFPLen);
-			printf_fast_f("downlink timeout:%d\n\r", gu16TimeCnt);
-			if (u8RxLFPLen == 1) {
-				// 1 옥텟 수신, 초기 라인파이 임시 프로토콜
-				if (chk_my_addr(MY_ADDR, pu8RxUART[0])) {
-					//				rot_motor(u8RxUART);
-					printf_fast_f("Rx:%d\n\r", pu8RxUART[0]);
-					ctrl_rgbled_motor(u8RxUART);
+					// add_crc_linefi_packet_packet(&stLineFiPkt_UL);
+					// send_linefi_packet(&stLineFiPkt_UL);
+					// su8Cnt++;
+					// stLineFiPkt_UL.u8Ver = su8Cnt;
+					// gu8UART = 0;
 				}
-			}
-			else if(u8RxLFPLen < 8) {
-				// 7 옥텟 이하 수신, 초기 라인파이 임시 프로토콜
-				UINT8 i;
-				printf_fast_f("1:Rx size:%d\n\r", u8RxLFPLen);
-				for (i=0; i<u8RxLFPLen;i++) {
-					printf_fast_f("0x%x ", pu8RxUART[i]);
+				else if (pktGenTime > 0) {
+					pktGenTime -= 1;
+					// if (pktGenTime % 1000 == 0)
+					// {
+					// 	printf_fast_f("%u ",pktGenTime); 
+					// }					
+					u8StateRxPkt = STATE_ULPKT_GEN;
 				}
-				printf_fast_f("\n\r");
-				for (i=0; i<u8RxLFPLen;i++) {
-					printf_fast_f("%d  ", gpu16RxTime[i]);
-				}
-				printf_fast_f("\n\r");
-			}
-			else {
-				UINT8 i;
-				printf_fast_f("2:Rx size:%d\n\r", u8RxLFPLen);
-				for (i=0; i<u8RxLFPLen;i++) {
-					printf_fast_f("0x%x ", pu8RxUART[i]);
-				}
-				printf_fast_f("\n\r");
-				for (i=0; i<u8RxLFPLen;i++) {
-					printf_fast_f("%d  ", gpu16RxTime[i]);
-				}
-				printf_fast_f("\n\r");
+				break;
+			
+			case STATE_ULPKT_SEND :
+				printf_fast_f("33333\r\n");
+				gu8UART = 1;
+				putchar(0x00); //prepreamble
+				putchar(0x00);
+				putchar(0xF0); // preamble 
+				putchar(0xF0);
+				putchar(0xF0);
 
-				cp_buf2linefipacket(u8RxLFPLen, pu8RxUART, &stLineFiPkt);
-				print_linefipacket(&stLineFiPkt);
-				process_all_packet(&stLineFiPkt);
-				if (gu8MyAddr == stLineFiPkt.u8Addr) {
-					process_my_packet(&stLineFiPkt);
+				add_crc_linefi_packet_packet(&stLineFiPkt_UL);
+				send_linefi_packet(&stLineFiPkt_UL);
+				// su8Cnt++;
+				// stLineFiPkt_UL.u8Ver = su8Cnt;
+				gu8UART = 0;
+				gu32TimeCnt = 0;
+				gu16TimeCnt = 0;
+				u8RxBufIdx = 0;
+				u8StateRxPkt = STATE_ACK_WAIT;
+				break;
+			
+			case STATE_ACK_WAIT : 				
+				if (get_octet_from_linefi(&u8RxUART)) {
+					gpu16RxTime[u8RxBufIdx-1] = gu16TimeCnt;
+					gu16TimeCnt = 0;
+					pu8RxUART[u8RxBufIdx++] = u8RxUART;
+					printf_fast_f("1");
 				}
-			}
-			u8StateRxPkt = STATE_RxPKT_INIT;
-			break;
-		} //switch(u8StateRxPkt)
-#if 0
-		switch(gu8UpLinkTxState) {
-			case ULTxState_INIT :
-				break;
-			case ULTxState_START :
-				gu8UpLinkTxState = ULTxState_L;
-				UART_TX = 0;
-				gu8PPambleDurCnt = 0;
-				gu8PPambleCnt = 0;
-				break;
-			case ULTxState_H :
-				if (gu8PPambleCnt == gu8PPambleNum) {
-#if 1
-					UINT8 i;
-					gu8PPambleDurCnt = 0;
-					gu8UART = 1;
-					//putchar(0x56);
-					putchar(0xF0);
-					putchar(0xF0);
-					putchar(0xF0);
-					putchar(0xF0);
-					for (i = 0;i<gu8TxCnt;i++) {
-						putchar_manchester(i);
+				else if (gu16TimeCnt > 10000) { //
+					u8RxLFPLen = u8RxBufIdx;
+					printf_fast_f("\r\nu8RxLFPLen: %d\r\n",u8RxLFPLen);
+					if (pu8RxUART[1] == 7 ) {
+						u8StateRxPkt = STATE_ACK_PROCESS;
 					}
-#endif
-					gu8UpLinkTxState = ULTxState_INIT;
+					else {
+						gu32TimeCnt = 0;
+						u8RxBufIdx = 0;
+						backoffTimer = (uint32)get_bktimer_value(MY_ADDR)*10;
+						printf_fast_f("ack wait->wrong ack->backoff\r\n");
+						// printf_fast_f("\r\n%d Backoff timer set: %u \r\n", u8StateRxPkt, backoffTimer); 
+						u8StateRxPkt = STATE_BKOFF; 
+					}
+					// if (u8RxLFPLen == 16){
+					// 	if (pu8RxUART[1] == 7) {
+					// 		u8StateRxPkt = STATE_ACK_PROCESS;
+					// 	}		
+					// }
+					// else {
+					// 	gu32TimeCnt = 0;
+					// 	u8RxBufIdx = 0;
+					// 	backoffTimer = get_bktimer_value(MY_ADDR);
+					// 	printf_fast_f("\r\n%d Backoff timer set: %d \r\n", u8StateRxPkt, backoffTimer); 
+					// 	u8StateRxPkt = STATE_BKOFF; 
+					// }			
 				}
-				else if (gu8PPambleDurCnt == gu8PPambleDurHNum) {
-					gu8PPambleCnt ++;
-					gu8PPambleDurCnt = 0;
-					UART_TX = 0;
-					gu8UpLinkTxState = ULTxState_L;
+				if (gu32TimeCnt > 100000) {
+					gu32TimeCnt = 0;
+					u8RxBufIdx = 0;
+					backoffTimer = (uint32)get_bktimer_value(MY_ADDR)*10;
+					printf_fast_f("ack wait->timeout->backoff\r\n");
+					// printf_fast_f("\r\n%d, Backoff timer set: %u \r\n", u8StateRxPkt,backoffTimer); 
+					u8StateRxPkt = STATE_BKOFF; 
 				}
 				break;
-			case ULTxState_L :
-				if (gu8PPambleDurCnt == gu8PPambleDurLNum) {
-					gu8PPambleDurCnt = 0;
-					gu8UpLinkTxState = ULTxState_H;
-					UART_TX = 1;
-					if (gu8PPambleCnt == gu8PPambleNum) {
-						gu8UART = 0; 
-						printf_fast_f("gu8PPambleCnt:%d\r\n",gu8PPambleCnt);
-						gu8UART = 1; 
+
+			case STATE_BKOFF : 
+				if (backoffTimer == 0) {
+					u8StateRxPkt = STATE_ULPKT_SEND; 
+				}
+				else if (backoffTimer > 0) {
+					backoffTimer -= 1;
+					// if (backoffTimer % 1000 == 0){
+					// 	printf_fast_f("%u ",backoffTimer);
+					// }
+					
+					// if (backoffTimer % 1000 == 0){
+					// 	printf_fast_f("Backoff: %d \r\n", backoffTimer);
+					// }
+					u8StateRxPkt = STATE_BKOFF; 				
+				}
+				break;
+			case STATE_ACK_PROCESS :				
+				//static UINT8 __xdata su8Cnt = 1;				
+				if (u8RxLFPLen == 16) { // receive ACK pu8RxUART[1] == 7 && 
+					if (pu8RxUART[2] == MY_ADDR){ //chk_crc_linefi_packet_packet(&stLineFiPkt) ?
+						UINT8 i;
+						printf_fast_f("ACKACKACK\r\n");
+						cp_buf2linefipacket(u8RxLFPLen, pu8RxUART, &stLineFiPkt);
+						print_linefipacket(&stLineFiPkt);
+						//process_all_packet(&stLineFiPkt);
+						printf_fast_f("Slave %d, DL_packet_num: %d, Rx size:%d\n\r", MY_ADDR, pu8RxUART[5+MY_ADDR],u8RxLFPLen);
+						for (i=0; i<u8RxLFPLen;i++) {
+							printf_fast_f("0x%x ", pu8RxUART[i]);
+						}
+						su8Cnt++;
+						stLineFiPkt_UL.u8Ver = su8Cnt;
+						pktGenTime = (uint32)get_timer_value(MY_ADDR)*10;
+						// printf_fast_f("PKT gentime: %u \r\n", pktGenTime);
+						u8StateRxPkt = STATE_ULPKT_GEN; 
+						printf_fast_f("\n\r");
+						printf_fast_f("\n\r");
+						u8RxBufIdx = 0;	
+						gu16TimeCnt = 0;
 					}
+					else{
+						u8StateRxPkt = STATE_ACK_WAIT; 
+						u8RxBufIdx = 0;	
+						gu16TimeCnt = 0;
+
+					}
+										
 				}
 				else {
-					gu8PPambleDurCnt++;
+					u8RxBufIdx = 0;
+					gu16TimeCnt = 0;
+					
+					u8StateRxPkt = STATE_ACK_WAIT; 
 				}
 				break;
-			case ULTxState_NONE :
-				break;
-		} //switch(gu8UpLinkTxState)
-#endif
+			case STATE_RxPKT_END :
+				printf_fast_f("\r\nTo %d -> Rx SIZE:%d\n\r", pu8RxUART[2], u8RxLFPLen);
+				// printf_fast_f("downlink timeout:%d\n\r", gu16TimeCnt);
+				if (u8RxLFPLen == 1) {
+					// 1 옥텟 수신, 초기 라인파이 임시 프로토콜
+					if (chk_my_addr(MY_ADDR, pu8RxUART[0])) {
+						//				rot_motor(u8RxUART);
+						printf_fast_f("Rx:%d\n\r", pu8RxUART[0]);
+						ctrl_rgbled_motor(u8RxUART);
+					}
+				}
+				else if(u8RxLFPLen < 8) {
+					// 7 옥텟 이하 수신, 초기 라인파이 임시 프로토콜
+					UINT8 i;
+					printf_fast_f("1:Rx size:%d\n\r", u8RxLFPLen);
+					for (i=0; i<u8RxLFPLen;i++) {
+						printf_fast_f("0x%x ", pu8RxUART[i]);
+					}
+					printf_fast_f("\n\r");
+					for (i=0; i<u8RxLFPLen;i++) {
+						printf_fast_f("%d  ", gpu16RxTime[i]);
+					}
+					printf_fast_f("\n\r");
+				}
+				else {
+					UINT8 i;
+					//static UINT8 __xdata su8Cnt = 1;
+					if (pu8RxUART[1] == 100) { // start aloha
+						pktGenTime = (uint32)get_timer_value(MY_ADDR)*10;	
+						// printf_fast_f("PKT gentime: %u \r\n", pktGenTime);					
+						u8RxBufIdx = 0;
+						u8StateRxPkt = STATE_ULPKT_GEN; 
+					}
+					// if (pu8RxUART[1] == 7 && pu8RxUART[2] == MY_ADDR && chk_crc_linefi_packet_packet(&stLineFiPkt) == 1) { // receive ACK
+					// 	printf_fast_f("ACKACKACK\r\n");
+					// 	cp_buf2linefipacket(u8RxLFPLen, pu8RxUART, &stLineFiPkt);
+					// 	print_linefipacket(&stLineFiPkt);
+					// 	//process_all_packet(&stLineFiPkt);
+					// 	printf_fast_f("Slave %d, DL_packet_num: %d, Rx size:%d\n\r", MY_ADDR, pu8RxUART[5+MY_ADDR],u8RxLFPLen);
+					// 	for (i=0; i<u8RxLFPLen;i++) {
+					// 		printf_fast_f("0x%x ", pu8RxUART[i]);
+					// 	}
+					// 	printf_fast_f("\n\r");
+					// 	printf_fast_f("\n\r");
+					// 	u8RxBufIdx = 0;
+					// 	pktGenTime = get_timer_value(MY_ADDR);
+					// 	u8StateRxPkt = STATE_ULPKT_GEN; 
+					// }
 
+					// if (pu8RxUART[2] == MY_ADDR && chk_crc_linefi_packet_packet(&stLineFiPkt) == 1){	
+					// 	cp_buf2linefipacket(u8RxLFPLen, pu8RxUART, &stLineFiPkt);
+					// 	print_linefipacket(&stLineFiPkt);
+					// 	process_all_packet(&stLineFiPkt);	
+						
+						//printf_fast_f("%d",chk_crc_linefi_packet_packet(&stLineFiPkt));	
+						// if (chk_crc_linefi_packet_packet(&stLineFiPkt) == 1) {
+						// 	gu8UART = 1;
+						// 	putchar(0x00); //prepreamble
+						// 	putchar(0x00);
+						// 	putchar(0xF0); // preamble 
+						// 	putchar(0xF0);
+						// 	putchar(0xF0);
 
+						// 	add_crc_linefi_packet_packet(&stLineFiPkt_UL);
+						// 	send_linefi_packet(&stLineFiPkt_UL);
+						// 	su8Cnt++;
+						// 	stLineFiPkt_UL.u8Ver = su8Cnt;
+						// }
+						// gu8UART = 0;
+					
+						// printf_fast_f("Slave %d, DL_packet_num: %d, Rx size:%d\n\r", MY_ADDR, pu8RxUART[5+MY_ADDR],u8RxLFPLen);
+						// for (i=0; i<u8RxLFPLen;i++) {
+						// 	printf_fast_f("0x%x ", pu8RxUART[i]);
+						// }
+						// printf_fast_f("\n\r");
+						// for (i=0; i<u8RxLFPLen;i++) {
+						// 	printf_fast_f("%d  ", gpu16RxTime[i]);
+						// }
+						// printf_fast_f("\n\r");
+
+						//printf_fast_f("%d\r\n",cp_buf2linefipacket(u8RxLFPLen, pu8RxUART, &stLineFiPkt));
+						// cp_buf2linefipacket(u8RxLFPLen, pu8RxUART, &stLineFiPkt);
+						// print_linefipacket(&stLineFiPkt);
+						// process_all_packet(&stLineFiPkt);
+						// if (gu8MyAddr == stLineFiPkt.u8Addr) {
+						// 	process_my_packet(&stLineFiPkt);
+						// }
+						/// 새로 추가 
+				// }
+		}
+					//u8StateRxPkt = STATE_RxPKT_INIT;
+					break;
+		} //switch(u8StateRxPkt)
 	} //while(1)
-}
+	}

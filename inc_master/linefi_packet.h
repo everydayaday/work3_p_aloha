@@ -67,6 +67,5 @@ uint8 cp_buf2linefipacket(uint8 au8Size, uint8 * apu8RxBuf, linefi_packet_t * ap
 void print_linefipacket(linefi_packet_t * apstLineFiPkt);
 uint8 crc8( uint8 *input_str, uint8 num_bytes, uint8 au8CRC);
 void print_raw_packet(uint8 au8Size, uint8 * apu8Data);
-uint8 get_timer_value(uint8 index);
-uint8 get_bktimer_value(uint8 index);
+
 #endif

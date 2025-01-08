@@ -7,12 +7,12 @@
 INCDIR  = ../inc
 SRCDIR  = ./src
 OBJDIR  = ./obj
-HEXDIR  = ./hex
+HEXDIR  = ../hex
 LIBDIR  = ../lib
 
 # ------------------------------------------------------
 # Target and Source
-TARGET = $(HEXDIR)/linefi_slave
+TARGET = $(HEXDIR)/linefi_slave_aloha_ver1_3
 
 #C_SRC = $(SRCDIR)/helloworld.c
 C_SRC := $(wildcard $(SRCDIR)/*.c $(LIBDIR)/*.c)

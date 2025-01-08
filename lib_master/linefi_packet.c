@@ -185,44 +185,6 @@ const uint8 sht75_crc_table[] = {
     130, 179, 224, 209, 70,  119, 36,  21,  59,  10,  89,  104, 255, 206, 157, 172
 };
 
-const uint16 packet_gen_table[] = {
-	45, 5, 31, 24, 3, 20, 39, 1, 28, 3, 40, 59, 2, 18, 29, 3, 14, 31, 65, 30, 9, 8, 
-	37, 7, 5, 1, 1, 43, 1, 36, 10, 74, 35, 40, 19, 7, 16, 29, 85, 11, 71, 20, 11, 72, 
-	5, 41, 19, 33, 6, 1, 6, 44, 2, 8, 1, 52, 4, 20, 12, 20, 5, 21, 17, 17, 6, 8, 7, 24, 
-	1, 88, 1, 19, 19, 31, 12, 24, 13, 25, 23, 16, 22, 3, 10, 10, 9, 24, 44, 1, 3, 16, 17, 
-	1, 8, 5, 37, 17, 11, 2, 21, 2};
-
-uint8 get_timer_value(uint8 index) {
-	//uint16 value = packet_gen_table[index];
-	uint8 value;
-	uint8 a;
-	static uint8 *ptr3 = NULL; 
-	if (ptr3 == NULL) {
-        ptr3 = (uint8 *)packet_gen_table;
-    } 
-	ptr3 += index; 
-	if (ptr3 >= packet_gen_table + sizeof(packet_gen_table)) {
-        ptr3 = (uint8*)packet_gen_table; 
-    }
-	value = (*ptr3);
-	return value;
-}
-uint8 get_bktimer_value(uint8 index) {	
-	uint8 value;
-	uint8 a;
-	static uint8 *ptr_sht = NULL; 
-	if (ptr_sht == NULL) {
-        ptr_sht = (uint8*)sht75_crc_table;
-    } 
-    ptr_sht += index; 
-    if (ptr_sht >= sht75_crc_table + sizeof(sht75_crc_table)) {
-        ptr_sht = (uint8*)sht75_crc_table; 
-    }
-	value = (*ptr_sht);
-		
-	return value;
-}
-
 uint8 crc8( uint8 *input_str, uint8 num_bytes, uint8 au8CRC) 
 {
     uint8 a;

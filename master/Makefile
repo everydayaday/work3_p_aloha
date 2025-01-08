@@ -4,15 +4,15 @@
 # ------------------------------------------------------
 # PATH
 
-INCDIR  = ../inc
+INCDIR  = ../inc_master
 SRCDIR  = ./src
 OBJDIR  = ./obj
-HEXDIR  = ./hex
-LIBDIR  = ../lib
+HEXDIR  = ../hex
+LIBDIR  = ../lib_master
 
 # ------------------------------------------------------
 # Target and Source
-TARGET = $(HEXDIR)/linefi_master
+TARGET = $(HEXDIR)/linefi_master_aloha_ver3
 
 #C_SRC = $(SRCDIR)/helloworld.c
 C_SRC := $(wildcard $(SRCDIR)/*.c $(LIBDIR)/*.c)
